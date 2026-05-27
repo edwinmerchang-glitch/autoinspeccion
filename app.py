@@ -325,84 +325,85 @@ def pct_color(p):
     if p >= 0.85: return "#f59e0b"
     return "#ef4444"
 
-def gauge(value, title, color="#1a56db", suffix="%", max_val=100):
-    """Ring donut gauge — modern, minimal, no axis clutter."""
-    pct = value if suffix == "%" else value / max_val
-    pct = max(0.0, min(1.0, pct))
-    display_val = f"{value*100:.0f}%" if suffix == "%" else f"{value:.1f}"
-
-    # Color palette based on threshold
-    if color == "#10b981":   grad_hi, grad_lo, track = "#5DCAA5", "#1D9E75", "#E1F5EE"
-    elif color == "#f59e0b": grad_hi, grad_lo, track = "#EF9F27", "#BA7517", "#FAEEDA"
-    else:                    grad_hi, grad_lo, track = "#f87171", "#E24B4A", "#FCEBEB"
-
-    # Arc path: semicircle from 210° to 330° (240° sweep)
+def gauge_html(value, title, label, threshold_color):
+    """
+    Pure SVG ring gauge embedded as HTML — renders perfectly in Streamlit st.markdown.
+    value: 0.0–1.0 (percentage) or a raw score depending on display_val
+    threshold_color: result of pct_color()
+    label: subtitle shown below value (e.g. '111/117 ítems')
+    """
     import math
-    cx, cy, r = 80, 85, 55
-    sweep_deg = 240
-    start_deg = 210
-    end_all = start_deg + sweep_deg
-    end_fill = start_deg + sweep_deg * pct
 
-    def arc_pt(deg):
+    pct = max(0.0, min(1.0, value))
+    display_val = f"{pct*100:.0f}%"
+
+    # Color theme
+    if threshold_color == "#10b981":
+        arc_col, txt_col, track_col, status_txt = "#1D9E75", "#085041", "#E1F5EE", "Muy favorable"
+    elif threshold_color == "#f59e0b":
+        arc_col, txt_col, track_col, status_txt = "#EF9F27", "#854F0B", "#FAEEDA", "Aceptable"
+    else:
+        arc_col, txt_col, track_col, status_txt = "#E24B4A", "#791F1F", "#FCEBEB", "Desfavorable"
+
+    # SVG arc geometry — 240° sweep, starts at 210°
+    cx, cy, r = 100, 100, 70
+    stroke_w = 16
+    sweep = 240
+    start = 210
+
+    def pt(deg):
         rad = math.radians(deg)
         return cx + r * math.cos(rad), cy + r * math.sin(rad)
 
-    def arc_path(d1, d2, rr, laf):
-        x1, y1 = arc_pt(d1); x2, y2 = arc_pt(d2)
-        return f"M {x1:.2f} {y1:.2f} A {rr} {rr} 0 {laf} 1 {x2:.2f} {y2:.2f}"
+    def arc(d1, d2):
+        x1, y1 = pt(d1); x2, y2 = pt(d2)
+        diff = d2 - d1
+        laf = 1 if diff > 180 else 0
+        return f"M {x1:.3f} {y1:.3f} A {r} {r} 0 {laf} 1 {x2:.3f} {y2:.3f}"
 
-    laf_all  = 1 if sweep_deg > 180 else 0
-    laf_fill = 1 if sweep_deg * pct > 180 else 0
+    track   = arc(start, start + sweep)
+    end_deg = start + sweep * pct
+    fill    = arc(start, end_deg) if pct > 0.005 else ""
 
-    track_path = arc_path(start_deg, end_all, r, laf_all)
-    fill_path  = arc_path(start_deg, end_fill, r, laf_fill) if pct > 0.001 else ""
+    # Circumference trick: use stroke-dasharray on a full circle for crisp rendering
+    # Instead, render path directly — works fine in browsers
+    fill_svg = f'<path d="{fill}" fill="none" stroke="{arc_col}" stroke-width="{stroke_w}" stroke-linecap="round"/>' if fill else ""
 
-    # Status label
-    if pct >= 0.95:   status_txt, status_col = "Muy favorable", grad_lo
-    elif pct >= 0.85: status_txt, status_col = "Aceptable",     "#BA7517"
-    else:             status_txt, status_col = "Desfavorable",  "#A32D2D"
+    # End-cap dot for fill arc
+    ex, ey = pt(end_deg)
+    cap_svg = f'<circle cx="{ex:.2f}" cy="{ey:.2f}" r="{stroke_w//2}" fill="{arc_col}"/>' if pct > 0.02 else ""
 
-    fig = go.Figure()
-
-    # Track (background arc)
-    fig.add_shape(type="path", path=track_path,
-                  line=dict(color=track, width=14), fillcolor="rgba(0,0,0,0)")
-
-    # Fill arc
-    if fill_path:
-        fig.add_shape(type="path", path=fill_path,
-                      line=dict(color=grad_hi, width=14), fillcolor="rgba(0,0,0,0)")
-
-    # Gradient overlay (thin second arc slightly offset for depth)
-    if pct > 0.05:
-        mid_deg = start_deg + sweep_deg * pct * 0.5
-        fig.add_shape(type="path", path=arc_path(start_deg, min(start_deg + sweep_deg*pct*0.6, end_fill), r, 0 if sweep_deg*pct*0.6<=180 else 1),
-                      line=dict(color=grad_lo, width=4), fillcolor="rgba(0,0,0,0)")
-
-    # Value text
-    fig.add_annotation(x=cx, y=cy - 4, text=f"<b>{display_val}</b>",
-                       font=dict(size=26, family="Inter", color=grad_lo),
-                       showarrow=False, xref="x", yref="y")
-
-    # Status text
-    fig.add_annotation(x=cx, y=cy + 20, text=status_txt,
-                       font=dict(size=10, family="Inter", color=status_col),
-                       showarrow=False, xref="x", yref="y")
-
-    # Title
-    fig.add_annotation(x=cx, y=cy + 50, text=title,
-                       font=dict(size=11, family="Inter", color="#94a3b8"),
-                       showarrow=False, xref="x", yref="y")
-
-    fig.update_xaxes(range=[0, 160], visible=False)
-    fig.update_yaxes(range=[0, 160], visible=False)
-    fig.update_layout(
-        height=180, margin=dict(t=8, b=8, l=8, r=8),
-        paper_bgcolor="white", plot_bgcolor="white",
-        font_family="Inter", showlegend=False,
-    )
-    return fig
+    svg = f"""
+    <div style="background:white;border-radius:14px;border:1px solid #e8eef5;
+                box-shadow:0 2px 8px rgba(0,0,0,.04);padding:1.25rem 1rem 1rem;text-align:center;">
+      <div style="font-size:.72rem;font-weight:700;color:#94a3b8;text-transform:uppercase;
+                  letter-spacing:.07em;margin-bottom:.5rem;">{title}</div>
+      <svg width="200" height="165" viewBox="0 0 200 145" xmlns="http://www.w3.org/2000/svg"
+           style="display:block;margin:0 auto;overflow:visible;">
+        <!-- track -->
+        <path d="{track}" fill="none" stroke="{track_col}" stroke-width="{stroke_w}" stroke-linecap="round"/>
+        <!-- fill -->
+        {fill_svg}
+        {cap_svg}
+        <!-- start cap -->
+        <circle cx="{pt(start)[0]:.2f}" cy="{pt(start)[1]:.2f}" r="{stroke_w//2}" fill="{track_col}"/>
+        <!-- value -->
+        <text x="100" y="95" text-anchor="middle" dominant-baseline="middle"
+              font-family="Inter,sans-serif" font-size="30" font-weight="700" fill="{arc_col}">{display_val}</text>
+        <!-- status -->
+        <text x="100" y="118" text-anchor="middle"
+              font-family="Inter,sans-serif" font-size="11" fill="{txt_col}">{status_txt}</text>
+        <!-- label -->
+        <text x="100" y="134" text-anchor="middle"
+              font-family="Inter,sans-serif" font-size="10" fill="#94a3b8">{label}</text>
+        <!-- scale ticks -->
+        <text x="{pt(start)[0]-6:.1f}" y="{pt(start)[1]+4:.1f}" text-anchor="end"
+              font-family="Inter,sans-serif" font-size="9" fill="#cbd5e1">0%</text>
+        <text x="{pt(start+sweep)[0]+6:.1f}" y="{pt(start+sweep)[1]+4:.1f}" text-anchor="start"
+              font-family="Inter,sans-serif" font-size="9" fill="#cbd5e1">100%</text>
+      </svg>
+    </div>"""
+    return svg
 
 def generate_excel_report(aud_row, items_farma, items_tienda, hallazgos, botiquin, tienda_name):
     buf = io.BytesIO()
@@ -554,20 +555,14 @@ if page == "📊  Dashboard":
 
     st.markdown("<br>", unsafe_allow_html=True)
 
-    # ── Gauges
-    g1,g2,g3 = st.columns(3)
+    # ── Gauges (pure SVG, renders natively in Streamlit)
+    g1, g2, g3 = st.columns(3)
     with g1:
-        st.markdown("<div class='card'><div class='card-hd'>Farmacia</div>", unsafe_allow_html=True)
-        st.plotly_chart(gauge(pf,"Cumplimiento Farma",pct_color(pf)), use_container_width=True, key="gf")
-        st.markdown("</div>", unsafe_allow_html=True)
+        st.markdown(gauge_html(pf,  "Farmacia",  f"{cf}/{tf} ítems",        pct_color(pf)),   unsafe_allow_html=True)
     with g2:
-        st.markdown("<div class='card'><div class='card-hd'>Tienda</div>", unsafe_allow_html=True)
-        st.plotly_chart(gauge(pt,"Criterios Tienda",pct_color(pt)), use_container_width=True, key="gt")
-        st.markdown("</div>", unsafe_allow_html=True)
+        st.markdown(gauge_html(pt,  "Tienda",    f"Prom. {avg_t:.1f} / 10", pct_color(pt)),   unsafe_allow_html=True)
     with g3:
-        st.markdown("<div class='card'><div class='card-hd'>Global</div>", unsafe_allow_html=True)
-        st.plotly_chart(gauge(calif,"Score Global",pct_color(calif)), use_container_width=True, key="gg")
-        st.markdown("</div>", unsafe_allow_html=True)
+        st.markdown(gauge_html(calif,"Global",   resultado,                  pct_color(calif)), unsafe_allow_html=True)
 
     # ── Charts
     cl, cr = st.columns([1.3,1])
