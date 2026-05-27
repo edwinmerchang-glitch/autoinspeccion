@@ -137,9 +137,14 @@ div.nav-active > div > div > button:hover {
 .kpi.amber::after { background: linear-gradient(90deg,#b45309,#fbbf24); }
 .kpi.purple::after{ background: linear-gradient(90deg,#7c3aed,#a78bfa); }
 .kpi-lbl { font-size:0.7rem; font-weight:700; color:#94a3b8; text-transform:uppercase; letter-spacing:.07em; margin-bottom:.5rem; }
-.kpi-val { font-size:2.1rem; font-weight:800; color:#0f172a; line-height:1; letter-spacing:-0.02em; }
+.kpi-val { font-size:1.75rem; font-weight:800; color:#0f172a; line-height:1.1; letter-spacing:-0.01em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .kpi-sub { font-size:0.76rem; color:#94a3b8; margin-top:4px; }
 .kpi-icon { position:absolute; right:1.25rem; top:50%; transform:translateY(-50%); font-size:2rem; opacity:0.12; }
+.kpi-val.val-green   { color:#059669; }
+.kpi-val.val-amber   { color:#b45309; }
+.kpi-val.val-red     { color:#dc2626; }
+.kpi-val.val-blue    { color:#1a56db; }
+.kpi-val.val-purple  { color:#7c3aed; }
 
 /* ─ Cards ─ */
 .card {
@@ -572,15 +577,48 @@ if page == "📊  Dashboard":
     avg_t = items_t["calificacion"].mean() if len(items_t) else 0
     h_pend = len(hall[hall["estado"]=="Pendiente"]) if len(hall) else 0
 
+    # ── Color helpers for KPI values
+    def _val_color(pct):
+        if pct >= 0.95: return "val-green"
+        if pct >= 0.85: return "val-amber"
+        return "val-red"
+
+    res_val_color = "val-green" if resultado=="FAVORABLE" else ("val-amber" if resultado=="CONDICIONADO" else "val-red")
+    res_accent    = "green"     if resultado=="FAVORABLE" else ("amber"     if resultado=="CONDICIONADO" else "red")
+    hall_accent   = "red" if h_pend > 0 else "green"
+    hall_val_col  = "val-red" if h_pend > 0 else "val-green"
+
     k1,k2,k3,k4,k5 = st.columns(5)
-    for col, color, label, val, sub in [
-        (k1,"blue","Calificación Global",f"{calif:.0%}","Score consolidado"),
-        (k2,"green","Cumplimiento Farma",f"{pf:.0%}",f"{cf}/{tf} ítems"),
-        (k3,"purple","Promedio Tienda",f"{avg_t:.1f}","Meta: 9.5 / 10"),
-        (k4,"amber","Hallazgos Pendientes",str(h_pend),"sin resolver"),
-        (k5,"red" if h_pend>3 else "green","Estado",resultado,audit_date),
-    ]:
-        col.markdown(f"<div class='kpi {color}'><div class='kpi-lbl'>{label}</div><div class='kpi-val'>{val}</div><div class='kpi-sub'>{sub}</div></div>", unsafe_allow_html=True)
+
+    k1.markdown(f"""<div class='kpi blue'>
+      <div class='kpi-lbl'>Calificación Global</div>
+      <div class='kpi-val {_val_color(calif)}'>{calif:.0%}</div>
+      <div class='kpi-sub'>Score consolidado</div>
+    </div>""", unsafe_allow_html=True)
+
+    k2.markdown(f"""<div class='kpi green'>
+      <div class='kpi-lbl'>Cumplimiento Farma</div>
+      <div class='kpi-val {_val_color(pf)}'>{pf:.0%}</div>
+      <div class='kpi-sub'>{cf}/{tf} ítems</div>
+    </div>""", unsafe_allow_html=True)
+
+    k3.markdown(f"""<div class='kpi purple'>
+      <div class='kpi-lbl'>Promedio Tienda</div>
+      <div class='kpi-val {_val_color(pt)}'>{avg_t:.1f}</div>
+      <div class='kpi-sub'>Meta: 9.5 / 10</div>
+    </div>""", unsafe_allow_html=True)
+
+    k4.markdown(f"""<div class='kpi {hall_accent}'>
+      <div class='kpi-lbl'>Hallazgos Pendientes</div>
+      <div class='kpi-val {hall_val_col}'>{h_pend}</div>
+      <div class='kpi-sub'>sin resolver</div>
+    </div>""", unsafe_allow_html=True)
+
+    k5.markdown(f"""<div class='kpi {res_accent}'>
+      <div class='kpi-lbl'>Estado</div>
+      <div class='kpi-val {res_val_color}' style='font-size:1.15rem;'>{resultado}</div>
+      <div class='kpi-sub'>{audit_date}</div>
+    </div>""", unsafe_allow_html=True)
 
     st.markdown("<br>", unsafe_allow_html=True)
 
