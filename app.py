@@ -781,7 +781,7 @@ elif page == "➕ Nueva Auditoría":
             fecha = st.date_input("Fecha de Auditoría", value=date.today())
             resultado_sel = st.selectbox("Resultado", ["FAVORABLE", "DESFAVORABLE", "CONDICIONADO"])
 
-        calif = st.slider("Calificación Global", 0.0, 1.0, 0.90, 0.01, format="%.0%%")
+        calif = st.slider("Calificación Global (0.0 - 1.0)", 0.0, 1.0, 0.90, 0.01)
 
         st.markdown("---")
         st.markdown("**Hallazgos Iniciales** (opcional)")
