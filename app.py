@@ -325,26 +325,83 @@ def pct_color(p):
     if p >= 0.85: return "#f59e0b"
     return "#ef4444"
 
-def gauge(value, title, color="#1a56db"):
-    fig = go.Figure(go.Indicator(
-        mode="gauge+number",
-        value=round(value*100, 1),
-        title={"text": title, "font": {"size": 12, "family":"Inter", "color":"#64748b"}},
-        number={"suffix":"%","font":{"size":28,"family":"Inter","color":"#0f172a"}},
-        gauge={
-            "axis":{"range":[0,100],"tickwidth":0,"tickfont":{"size":9,"color":"#94a3b8"}},
-            "bar":{"color":color,"thickness":0.28},
-            "bgcolor":"#f8fafc","borderwidth":0,
-            "steps":[
-                {"range":[0,85],"color":"#fef2f2"},
-                {"range":[85,95],"color":"#fefce8"},
-                {"range":[95,100],"color":"#f0fdf4"},
-            ],
-            "threshold":{"line":{"color":color,"width":3},"thickness":0.8,"value":value*100}
-        }
-    ))
-    fig.update_layout(height=190,margin=dict(t=40,b=5,l=15,r=15),
-                      paper_bgcolor="white",plot_bgcolor="white",font_family="Inter")
+def gauge(value, title, color="#1a56db", suffix="%", max_val=100):
+    """Ring donut gauge — modern, minimal, no axis clutter."""
+    pct = value if suffix == "%" else value / max_val
+    pct = max(0.0, min(1.0, pct))
+    display_val = f"{value*100:.0f}%" if suffix == "%" else f"{value:.1f}"
+
+    # Color palette based on threshold
+    if color == "#10b981":   grad_hi, grad_lo, track = "#5DCAA5", "#1D9E75", "#E1F5EE"
+    elif color == "#f59e0b": grad_hi, grad_lo, track = "#EF9F27", "#BA7517", "#FAEEDA"
+    else:                    grad_hi, grad_lo, track = "#f87171", "#E24B4A", "#FCEBEB"
+
+    # Arc path: semicircle from 210° to 330° (240° sweep)
+    import math
+    cx, cy, r = 80, 85, 55
+    sweep_deg = 240
+    start_deg = 210
+    end_all = start_deg + sweep_deg
+    end_fill = start_deg + sweep_deg * pct
+
+    def arc_pt(deg):
+        rad = math.radians(deg)
+        return cx + r * math.cos(rad), cy + r * math.sin(rad)
+
+    def arc_path(d1, d2, rr, laf):
+        x1, y1 = arc_pt(d1); x2, y2 = arc_pt(d2)
+        return f"M {x1:.2f} {y1:.2f} A {rr} {rr} 0 {laf} 1 {x2:.2f} {y2:.2f}"
+
+    laf_all  = 1 if sweep_deg > 180 else 0
+    laf_fill = 1 if sweep_deg * pct > 180 else 0
+
+    track_path = arc_path(start_deg, end_all, r, laf_all)
+    fill_path  = arc_path(start_deg, end_fill, r, laf_fill) if pct > 0.001 else ""
+
+    # Status label
+    if pct >= 0.95:   status_txt, status_col = "Muy favorable", grad_lo
+    elif pct >= 0.85: status_txt, status_col = "Aceptable",     "#BA7517"
+    else:             status_txt, status_col = "Desfavorable",  "#A32D2D"
+
+    fig = go.Figure()
+
+    # Track (background arc)
+    fig.add_shape(type="path", path=track_path,
+                  line=dict(color=track, width=14), fillcolor="rgba(0,0,0,0)")
+
+    # Fill arc
+    if fill_path:
+        fig.add_shape(type="path", path=fill_path,
+                      line=dict(color=grad_hi, width=14), fillcolor="rgba(0,0,0,0)")
+
+    # Gradient overlay (thin second arc slightly offset for depth)
+    if pct > 0.05:
+        mid_deg = start_deg + sweep_deg * pct * 0.5
+        fig.add_shape(type="path", path=arc_path(start_deg, min(start_deg + sweep_deg*pct*0.6, end_fill), r, 0 if sweep_deg*pct*0.6<=180 else 1),
+                      line=dict(color=grad_lo, width=4), fillcolor="rgba(0,0,0,0)")
+
+    # Value text
+    fig.add_annotation(x=cx, y=cy - 4, text=f"<b>{display_val}</b>",
+                       font=dict(size=26, family="Inter", color=grad_lo),
+                       showarrow=False, xref="x", yref="y")
+
+    # Status text
+    fig.add_annotation(x=cx, y=cy + 20, text=status_txt,
+                       font=dict(size=10, family="Inter", color=status_col),
+                       showarrow=False, xref="x", yref="y")
+
+    # Title
+    fig.add_annotation(x=cx, y=cy + 50, text=title,
+                       font=dict(size=11, family="Inter", color="#94a3b8"),
+                       showarrow=False, xref="x", yref="y")
+
+    fig.update_xaxes(range=[0, 160], visible=False)
+    fig.update_yaxes(range=[0, 160], visible=False)
+    fig.update_layout(
+        height=180, margin=dict(t=8, b=8, l=8, r=8),
+        paper_bgcolor="white", plot_bgcolor="white",
+        font_family="Inter", showlegend=False,
+    )
     return fig
 
 def generate_excel_report(aud_row, items_farma, items_tienda, hallazgos, botiquin, tienda_name):
@@ -521,17 +578,47 @@ if page == "📊  Dashboard":
         sec_data = []
         for _, s in secs.iterrows():
             si = items_f[items_f["seccion_id"]==s["id"]]
-            if len(si): sec_data.append({"Sección":s["nombre"],"Cum":int(si["puntaje"].sum()),"Tot":len(si),"Pct":int(si["puntaje"].sum())/len(si)})
+            if len(si):
+                cum = int(si["puntaje"].sum()); tot = len(si); pct = cum/tot
+                sec_data.append({"seccion": s["nombre"], "cum": cum, "tot": tot, "pct": pct})
+
         if sec_data:
-            fig_b = px.bar(sec_data, x="Pct", y="Sección", orientation="h",
-                           text=[f"{d['Cum']}/{d['Tot']}" for d in sec_data],
-                           color="Pct", color_continuous_scale=["#fef2f2","#fefce8","#f0fdf4"], range_color=[0.8,1])
-            fig_b.update_traces(textposition="inside", textfont_size=11)
-            fig_b.update_layout(height=240, margin=dict(t=5,b=5,l=5,r=5), paper_bgcolor="white", plot_bgcolor="white",
-                                showlegend=False, coloraxis_showscale=False,
-                                xaxis=dict(tickformat=".0%",range=[0,1],gridcolor="#f1f5f9",showline=False),
-                                yaxis=dict(gridcolor="#f1f5f9",tickfont_size=11), font_family="Inter")
-            st.plotly_chart(fig_b, use_container_width=True, key="secbar")
+            for d in sec_data:
+                p   = d["pct"]
+                bar_color = "#1D9E75" if p>=0.95 else ("#EF9F27" if p>=0.85 else "#E24B4A")
+                txt_color = "#085041" if p>=0.95 else ("#854F0B" if p>=0.85 else "#791F1F")
+                bg_color  = "#E1F5EE" if p>=0.95 else ("#FAEEDA" if p>=0.85 else "#FCEBEB")
+                st.markdown(f"""
+                <div style='display:flex;align-items:center;gap:10px;margin-bottom:10px;'>
+                  <div style='font-size:.78rem;color:#475569;min-width:220px;max-width:220px;
+                              white-space:nowrap;overflow:hidden;text-overflow:ellipsis;' title='{d["seccion"]}'>
+                    {d["seccion"]}
+                  </div>
+                  <div style='flex:1;height:22px;background:{bg_color};border-radius:5px;overflow:hidden;position:relative;'>
+                    <div style='width:{p*100:.0f}%;height:100%;background:{bar_color};border-radius:5px;
+                                display:flex;align-items:center;justify-content:flex-end;padding-right:8px;
+                                font-size:.72rem;font-weight:600;color:white;min-width:40px;'>
+                      {d["cum"]}/{d["tot"]}
+                    </div>
+                  </div>
+                  <div style='font-size:.78rem;font-weight:700;color:{txt_color};min-width:36px;text-align:right;'>{p:.0%}</div>
+                </div>""", unsafe_allow_html=True)
+
+            # Legend
+            st.markdown("""
+            <div style='display:flex;gap:14px;margin-top:10px;padding-top:10px;
+                        border-top:1px solid #f1f5f9;font-size:.72rem;color:#94a3b8;flex-wrap:wrap;'>
+              <span style='display:flex;align-items:center;gap:5px;'>
+                <span style='width:9px;height:9px;border-radius:2px;background:#1D9E75;display:inline-block;'></span>≥ 95% · Muy favorable
+              </span>
+              <span style='display:flex;align-items:center;gap:5px;'>
+                <span style='width:9px;height:9px;border-radius:2px;background:#EF9F27;display:inline-block;'></span>85–94% · Aceptable
+              </span>
+              <span style='display:flex;align-items:center;gap:5px;'>
+                <span style='width:9px;height:9px;border-radius:2px;background:#E24B4A;display:inline-block;'></span>&lt; 85% · Desfavorable
+              </span>
+            </div>""", unsafe_allow_html=True)
+
         st.markdown("</div>", unsafe_allow_html=True)
 
     with cr:
@@ -758,19 +845,41 @@ elif page == "🏪  Auditoría Tienda":
     items_t2 = pd.read_sql("SELECT * FROM items_tienda WHERE auditoria_id=?", conn, params=(sel_aud_id,))
     conn.close()
 
-    fig = go.Figure()
+    st.markdown("<div class='card'><div class='card-hd'>Gráfico de Calificaciones</div>", unsafe_allow_html=True)
     for _, row in items_t2.iterrows():
         cal = row["calificacion"]
-        color = "#10b981" if cal>=row["superior"] else ("#f59e0b" if cal>=row["minimo"] else "#ef4444")
-        fig.add_trace(go.Bar(x=[row["criterio"]], y=[cal], marker_color=color,
-                             showlegend=False, text=[f"{cal}"], textposition="outside"))
-    fig.add_hline(y=9.5, line_dash="dash", line_color="#3b82f6", annotation_text="Meta")
-    fig.add_hline(y=9.0, line_dash="dot", line_color="#f59e0b", annotation_text="Mínimo")
-    fig.update_layout(height=300, margin=dict(t=20,b=5,l=5,r=5), paper_bgcolor="white", plot_bgcolor="white",
-                      xaxis=dict(tickangle=-30,tickfont_size=10,gridcolor="#f1f5f9"),
-                      yaxis=dict(range=[0,11],gridcolor="#f1f5f9"), font_family="Inter", bargap=0.3)
-    st.markdown("<div class='card'><div class='card-hd'>Gráfico de Calificaciones</div>", unsafe_allow_html=True)
-    st.plotly_chart(fig, use_container_width=True, key="tbar")
+        color = "#1D9E75" if cal>=row["superior"] else ("#EF9F27" if cal>=row["minimo"] else "#E24B4A")
+        txt_color = "#085041" if cal>=row["superior"] else ("#854F0B" if cal>=row["minimo"] else "#791F1F")
+        bg_color  = "#E1F5EE" if cal>=row["superior"] else ("#FAEEDA" if cal>=row["minimo"] else "#FCEBEB")
+        pct_width = cal / 10 * 100
+        # Meta marker position
+        meta_pct = row["meta"] / 10 * 100
+        sup_pct  = row["superior"] / 10 * 100
+        st.markdown(f"""
+        <div style='margin-bottom:12px;'>
+          <div style='display:flex;justify-content:space-between;font-size:.78rem;color:#475569;margin-bottom:4px;'>
+            <span style='font-weight:500;'>{row['criterio']}</span>
+            <span style='font-weight:700;color:{txt_color};'>{cal}</span>
+          </div>
+          <div style='position:relative;height:24px;background:{bg_color};border-radius:6px;overflow:visible;'>
+            <div style='width:{pct_width:.0f}%;height:100%;background:{color};border-radius:6px;
+                        display:flex;align-items:center;justify-content:flex-end;padding-right:8px;
+                        font-size:.72rem;font-weight:600;color:white;min-width:36px;transition:width .4s ease;'></div>
+            <!-- Meta line -->
+            <div style='position:absolute;top:-3px;bottom:-3px;left:{meta_pct:.0f}%;
+                        width:2px;background:#1a56db;border-radius:1px;opacity:.5;'
+                 title='Meta: {row["meta"]}'></div>
+            <!-- Superior line -->
+            <div style='position:absolute;top:-3px;bottom:-3px;left:{sup_pct:.0f}%;
+                        width:2px;background:#7c3aed;border-radius:1px;opacity:.4;'
+                 title='Superior: {row["superior"]}'></div>
+          </div>
+          <div style='display:flex;gap:12px;margin-top:3px;font-size:.68rem;color:#94a3b8;'>
+            <span>Mín: {row['minimo']}</span>
+            <span style='color:#1a56db;'>● Meta: {row['meta']}</span>
+            <span style='color:#7c3aed;'>● Superior: {row['superior']}</span>
+          </div>
+        </div>""", unsafe_allow_html=True)
     st.markdown("</div>", unsafe_allow_html=True)
 
     if changes_t:
