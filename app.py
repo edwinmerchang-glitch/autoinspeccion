@@ -13,7 +13,7 @@ st.set_page_config(
     page_title="Autoinspección Locatel",
     page_icon="🏥",
     layout="wide",
-    initial_sidebar_state="collapsed",
+    initial_sidebar_state="expanded",
 )
 
 # ── GLOBAL CSS ───────────────────────────────────────────────────────────────
@@ -39,12 +39,22 @@ header[data-testid="stHeader"] { display: none !important; }
     background: #0a0f1e !important;
     border-right: 1px solid #1a2744 !important;
     top: 56px !important;
-    box-shadow: 4px 0 24px rgba(0,0,0,.35) !important;
+    height: calc(100vh - 56px) !important;
+    position: fixed !important;
+    z-index: 9990 !important;
+    transition: transform .28s cubic-bezier(.4,0,.2,1),
+                margin-left .28s cubic-bezier(.4,0,.2,1) !important;
+    box-shadow: 4px 0 32px rgba(0,0,0,.45) !important;
+    overflow-y: auto !important;
+    width: 18rem !important;
 }
 [data-testid="stSidebar"] > div:first-child {
     padding-top: 1rem !important;
+    width: 18rem !important;
 }
 [data-testid="stSidebar"] * { color: #c8d6e5 !important; }
+/* Push main content right when sidebar open */
+[data-testid="stMain"] { transition: margin-left .28s cubic-bezier(.4,0,.2,1) !important; }
 
 /* Nav buttons inside sidebar */
 [data-testid="stSidebar"] .stButton > button {
@@ -396,58 +406,65 @@ today_str  = date.today().strftime("%d/%m/%Y")
 
 st.markdown(f"""
 <div class="topbar" id="topbar">
-  <button class="ham" id="hamBtn" onclick="toggleSidebar()" aria-label="Abrir menú">
+  <button class="ham" id="hamBtn" onclick="hamToggle(this)" aria-label="Abrir menú">
     <span></span><span></span><span></span>
   </button>
-  <div style="display:flex;flex-direction:column;justify-content:center;">
+  <div style="display:flex;flex-direction:column;justify-content:center;line-height:1.2;">
     <div class="tb-logo">🏥 Locatel</div>
     <div class="tb-sub">Autoinspección · v2.0</div>
   </div>
   <div class="tb-space"></div>
-  <div class="tb-chip"><span class="tb-page">{page_short}</span> &nbsp;·&nbsp; {today_str}</div>
+  <div class="tb-chip"><span class="tb-page">{page_short}</span>&nbsp;·&nbsp;{today_str}</div>
 </div>
 
 <script>
-(function() {{
-  function toggleSidebar() {{
-    var btn = document.getElementById('hamBtn');
-    // Find Streamlit sidebar toggle button and click it
-    var toggle = window.parent.document.querySelector('[data-testid="collapsedControl"]')
-               || window.parent.document.querySelector('button[kind="header"]')
-               || window.parent.document.querySelector('[data-testid="stSidebarCollapsedControl"]');
+(function(){{
+  var open = true; // sidebar starts expanded
 
-    // Directly toggle sidebar visibility via class on body
-    var sidebar = window.parent.document.querySelector('[data-testid="stSidebar"]');
-    if (!sidebar) return;
-    var isHidden = sidebar.style.transform === 'translateX(-110%)' || 
-                   sidebar.getAttribute('aria-expanded') === 'false' ||
-                   sidebar.classList.contains('st-emotion-cache-hidden');
-    
-    // Use Streamlit's internal toggle
-    var nativeBtn = window.parent.document.querySelector('button[data-testid="baseButton-header"]')
-                  || window.parent.document.querySelector('[aria-controls="bui3-tabpanel-0"]');
-    
-    // Fallback: directly manipulate sidebar style
-    if (!sidebar._stToggled) sidebar._stToggled = false;
-    if (sidebar._stToggled) {{
-      sidebar.style.cssText = '';
-      sidebar._stToggled = false;
-      btn.classList.remove('is-open');
-    }} else {{
-      sidebar.style.cssText = 'display:block!important;transform:translateX(0)!important;visibility:visible!important;';
-      sidebar._stToggled = true;
+  function hamToggle(btn) {{
+    var p = window.parent.document;
+    var sb = p.querySelector('[data-testid="stSidebar"]');
+    if (!sb) return;
+    open = !open;
+    if (open) {{
+      sb.style.marginLeft = '0';
+      sb.style.transform  = 'translateX(0)';
+      sb.style.visibility = 'visible';
+      sb.style.width      = '18rem';
       btn.classList.add('is-open');
+    }} else {{
+      sb.style.marginLeft = '-18rem';
+      sb.style.transform  = 'translateX(-100%)';
+      btn.classList.remove('is-open');
+    }}
+    // also shift main content
+    var main = p.querySelector('.main') || p.querySelector('[data-testid="stMain"]');
+    if (main) main.style.marginLeft = open ? '18rem' : '0';
+  }}
+
+  // expose globally so the button onclick fires correctly across iframe boundary
+  window.hamToggle = hamToggle;
+
+  // run on every Streamlit rerender to keep sidebar state consistent
+  function applyState() {{
+    var p   = window.parent.document;
+    var sb  = p.querySelector('[data-testid="stSidebar"]');
+    var btn = document.getElementById('hamBtn');
+    if (!sb || !btn) return;
+    if (open) {{
+      sb.style.marginLeft = '0';
+      sb.style.transform  = 'translateX(0)';
+      sb.style.visibility = 'visible';
+      sb.style.width      = '18rem';
+      btn.classList.add('is-open');
+    }} else {{
+      sb.style.marginLeft = '-18rem';
+      sb.style.transform  = 'translateX(-100%)';
+      btn.classList.remove('is-open');
     }}
   }}
-  window.toggleSidebar = toggleSidebar;
-
-  // Auto-hide sidebar on load
-  window.addEventListener('load', function() {{
-    setTimeout(function() {{
-      var sidebar = window.parent.document.querySelector('[data-testid="stSidebar"]');
-      if (sidebar) sidebar.style.cssText = '';
-    }}, 100);
-  }});
+  setTimeout(applyState, 300);
+  setTimeout(applyState, 800);
 }})();
 </script>
 """, unsafe_allow_html=True)
