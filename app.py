@@ -1080,20 +1080,81 @@ elif page == "🩺  Botiquín":
         csv_b = boti[["item","unidades","fecha_vencimiento"]].to_csv(index=False)
         st.download_button("⬇️ Exportar CSV", csv_b, file_name="botiquin.csv", mime="text/csv", use_container_width=True)
 
-    st.markdown("<div class='card'><div class='card-hd'>Inventario</div>", unsafe_allow_html=True)
-    for i,(_, row) in enumerate(boti.iterrows(),1):
+    st.markdown("<div class='card'><div class='card-hd'>Inventario — edita fechas directamente en cada fila</div>", unsafe_allow_html=True)
+
+    # Column headers
+    st.markdown("""
+    <div style='display:grid;grid-template-columns:2rem 2.5fr 1.2fr 1.6fr 1fr;gap:.75rem;
+         padding:.4rem 1rem;font-size:.68rem;font-weight:700;color:#94a3b8;
+         text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid #f1f5f9;margin-bottom:.25rem;'>
+      <span>#</span><span>Elemento</span><span>Unidades</span><span>Fecha vencimiento</span><span>Estado</span>
+    </div>""", unsafe_allow_html=True)
+
+    changes_b = False
+    for i, (_, row) in enumerate(boti.iterrows(), 1):
         lbl, bcls, diff = venc_status(row["fecha_vencimiento"])
-        bg = "#fff8f8" if diff<0 else ("#fffbeb" if diff<=90 else "white")
-        st.markdown(f"""
-        <div style='display:grid;grid-template-columns:2rem 2fr 1fr 1fr 1fr;gap:.75rem;align-items:center;
-             padding:.65rem 1rem;border-radius:9px;background:{bg};border:1px solid #f1f5f9;margin-bottom:.35rem;'>
-          <span style='color:#94a3b8;font-size:.76rem;font-weight:600;'>{i:02d}</span>
-          <span style='font-weight:500;font-size:.83rem;color:#0f172a;'>{row['item']}</span>
-          <span style='color:#64748b;font-size:.8rem;'>{row['unidades'] or '—'}</span>
-          <span style='color:#64748b;font-size:.78rem;'>{row['fecha_vencimiento'] or '—'}</span>
-          <span><span class='badge {bcls}'>{lbl}</span></span>
-        </div>""", unsafe_allow_html=True)
+        row_bg = "#fff8f8" if diff < 0 else ("#fffbeb" if 0 <= diff <= 90 else "white")
+        border = "#fecdd3" if diff < 0 else ("#fde68a" if 0 <= diff <= 90 else "#f1f5f9")
+
+        c_num, c_item, c_uni, c_fecha, c_badge = st.columns([0.3, 2.5, 1.2, 1.6, 1])
+
+        with c_num:
+            st.markdown(f"<div style='padding:.6rem 0;color:#94a3b8;font-size:.76rem;font-weight:600;'>{i:02d}</div>",
+                        unsafe_allow_html=True)
+
+        with c_item:
+            new_item = st.text_input(
+                f"item_{row['id']}", value=row["item"],
+                key=f"bi_{row['id']}", label_visibility="collapsed"
+            )
+            if new_item != row["item"]:
+                c = get_connection()
+                c.execute("UPDATE botiquin SET item=? WHERE id=?", (new_item, row["id"]))
+                c.commit(); c.close()
+                changes_b = True
+
+        with c_uni:
+            new_uni = st.text_input(
+                f"uni_{row['id']}", value=row["unidades"] or "",
+                placeholder="Unidad",
+                key=f"bu_{row['id']}", label_visibility="collapsed"
+            )
+            if new_uni != (row["unidades"] or ""):
+                c = get_connection()
+                c.execute("UPDATE botiquin SET unidades=? WHERE id=?", (new_uni or None, row["id"]))
+                c.commit(); c.close()
+                changes_b = True
+
+        with c_fecha:
+            # Parse existing date or default to today
+            try:
+                cur_date = datetime.strptime(str(row["fecha_vencimiento"]), "%Y-%m-%d").date() \
+                           if row["fecha_vencimiento"] and pd.notna(row["fecha_vencimiento"]) else date.today()
+            except:
+                cur_date = date.today()
+
+            new_fecha = st.date_input(
+                f"fecha_{row['id']}", value=cur_date,
+                key=f"bf_{row['id']}", label_visibility="collapsed",
+                format="DD/MM/YYYY"
+            )
+            if str(new_fecha) != str(row["fecha_vencimiento"] or ""):
+                c = get_connection()
+                c.execute("UPDATE botiquin SET fecha_vencimiento=? WHERE id=?",
+                          (str(new_fecha), row["id"]))
+                c.commit(); c.close()
+                changes_b = True
+
+        with c_badge:
+            # Re-compute status with potentially updated date
+            lbl2, bcls2, _ = venc_status(str(new_fecha))
+            st.markdown(f"<div style='padding:.55rem 0;'><span class='badge {bcls2}'>{lbl2}</span></div>",
+                        unsafe_allow_html=True)
+
     st.markdown("</div>", unsafe_allow_html=True)
+
+    if changes_b:
+        st.rerun()
 
 
 # ═══════════════════════════════════════════════════════════
