@@ -26,47 +26,59 @@ st.markdown("""
 .main { background: #f0f4f8; }
 .block-container { padding: 1.5rem 2rem 3rem; max-width: 1440px; }
 
-/* ─ Sidebar ─ */
+/* ─ Sidebar base ─ */
 [data-testid="stSidebar"] {
     background: #0a0f1e !important;
-    border-right: 1px solid #1e2d45;
+    border-right: 1px solid #1a2744;
 }
 [data-testid="stSidebar"] * { color: #c8d6e5 !important; }
-[data-testid="stSidebar"] .stRadio > label { display: none; }
-[data-testid="stSidebar"] .stRadio div[role="radiogroup"] {
-    display: flex; flex-direction: column; gap: 2px;
+
+/* ─ Nav buttons ─ */
+[data-testid="stSidebar"] .stButton > button {
+    width: 100% !important;
+    text-align: left !important;
+    background: transparent !important;
+    border: 1px solid transparent !important;
+    border-radius: 10px !important;
+    padding: 0.6rem 0.9rem !important;
+    font-size: 0.875rem !important;
+    font-weight: 500 !important;
+    color: #7a95b4 !important;
+    transition: all 0.15s ease !important;
+    box-shadow: none !important;
+    margin-bottom: 2px !important;
+    justify-content: flex-start !important;
 }
-[data-testid="stSidebar"] .stRadio label[data-baseweb="radio"] {
-    background: transparent;
-    border-radius: 8px;
-    padding: 0.55rem 0.85rem;
-    cursor: pointer;
-    font-size: 0.875rem;
-    font-weight: 500;
-    transition: all 0.15s ease;
-    border: 1px solid transparent;
+[data-testid="stSidebar"] .stButton > button:hover {
+    background: rgba(56,139,253,0.08) !important;
+    border-color: rgba(56,139,253,0.2) !important;
+    color: #93c5fd !important;
 }
-[data-testid="stSidebar"] .stRadio label[data-baseweb="radio"]:hover {
-    background: rgba(56,139,253,0.1) !important;
-    border-color: rgba(56,139,253,0.2);
+[data-testid="stSidebar"] .stButton > button:focus {
+    box-shadow: none !important; outline: none !important;
 }
-[data-testid="stSidebar"] .stRadio label[aria-checked="true"] {
-    background: rgba(56,139,253,0.15) !important;
-    border-color: rgba(56,139,253,0.4) !important;
-    color: #58a6ff !important;
+/* Active nav item wrapper */
+div.nav-active > div > div > button,
+div.nav-active > div > div > button:hover {
+    background: rgba(37,99,235,0.2) !important;
+    border-color: rgba(59,130,246,0.5) !important;
+    color: #60a5fa !important;
+    font-weight: 600 !important;
 }
+
+/* ─ Sidebar selectbox ─ */
 [data-testid="stSidebar"] .stSelectbox > div > div {
-    background: #111827 !important;
-    border-color: #1e2d45 !important;
+    background: #0f1a2e !important;
+    border-color: #1a2744 !important;
     color: #c8d6e5 !important;
-    border-radius: 8px !important;
+    border-radius: 9px !important;
 }
 [data-testid="stSidebar"] .stSelectbox label {
-    font-size: 0.7rem !important;
+    font-size: 0.68rem !important;
     text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: #4b6080 !important;
-    font-weight: 600;
+    letter-spacing: 0.09em;
+    color: #3b5270 !important;
+    font-weight: 700;
 }
 
 /* ─ Header Banner ─ */
@@ -455,14 +467,31 @@ with st.sidebar:
     <hr class='sdiv'>
     """, unsafe_allow_html=True)
 
-    page = st.radio("nav", [
-        "📊  Dashboard",
-        "💊  Auditoría Farma",
-        "🏪  Auditoría Tienda",
-        "⚠️  Hallazgos",
-        "🩺  Botiquín",
-        "➕  Nueva Auditoría",
-    ], label_visibility="collapsed")
+    # ── Nav buttons (session-state driven)
+    if "page" not in st.session_state:
+        st.session_state["page"] = "📊  Dashboard"
+
+    nav_items = [
+        ("📊", "Dashboard",        "📊  Dashboard"),
+        ("💊", "Auditoría Farma",  "💊  Auditoría Farma"),
+        ("🏪", "Auditoría Tienda", "🏪  Auditoría Tienda"),
+        ("⚠️", "Hallazgos",        "⚠️  Hallazgos"),
+        ("🩺", "Botiquín",         "🩺  Botiquín"),
+        ("➕", "Nueva Auditoría",  "➕  Nueva Auditoría"),
+    ]
+
+    st.markdown("<div style='margin-bottom:.25rem;'>", unsafe_allow_html=True)
+    for icon, label, key in nav_items:
+        is_active = st.session_state["page"] == key
+        active_css = "nav-active" if is_active else ""
+        st.markdown(f"<div class='{active_css}'>", unsafe_allow_html=True)
+        if st.button(f"{icon}  {label}", key=f"nav_{key}", use_container_width=True):
+            st.session_state["page"] = key
+            st.rerun()
+        st.markdown("</div>", unsafe_allow_html=True)
+    st.markdown("</div>", unsafe_allow_html=True)
+
+    page = st.session_state["page"]
 
     st.markdown("<hr class='sdiv'>", unsafe_allow_html=True)
 
