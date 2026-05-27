@@ -22,54 +22,21 @@ st.markdown("""
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 * { font-family: 'Inter', sans-serif; box-sizing: border-box; }
 
-/* ── Layout ── */
 .main { background: #f0f4f8; }
 .block-container { padding: 1.5rem 2rem 3rem; max-width: 1440px; }
 
-/* ── Hide Streamlit chrome ── */
 #MainMenu, footer { visibility: hidden; }
 .stDeployButton { display: none; }
 header[data-testid="stHeader"] { display: none !important; }
 
-/* ══════════════════════════════════════
-   SIDEBAR — dark drawer style
-══════════════════════════════════════ */
+/* ── Sidebar ── */
 [data-testid="stSidebar"] {
     background: #0a0f1e !important;
     border-right: 1px solid #1a2744 !important;
-    min-width: 240px !important;
-    max-width: 260px !important;
 }
 [data-testid="stSidebar"] > div { padding-top: 0.5rem !important; }
 [data-testid="stSidebar"] * { color: #c8d6e5 !important; }
 
-/* Native collapse/expand arrow button — style as hamburger */
-[data-testid="stSidebarCollapsedControl"] {
-    top: 0.6rem !important;
-    left: 0.6rem !important;
-}
-button[data-testid="baseButton-headerNoPadding"],
-[data-testid="stSidebarCollapsedControl"] button {
-    background: #0a0f1e !important;
-    border: 1px solid #1a2744 !important;
-    border-radius: 9px !important;
-    width: 38px !important; height: 38px !important;
-    color: #7a95b4 !important;
-    box-shadow: none !important;
-}
-[data-testid="stSidebarCollapsedControl"] button:hover {
-    border-color: #3b82f6 !important;
-    background: rgba(59,130,246,0.08) !important;
-}
-/* The sidebar expand button shown when collapsed */
-[data-testid="collapsedControl"] button {
-    background: #0a0f1e !important;
-    border: 1px solid #1a2744 !important;
-    border-radius: 9px !important;
-    color: #7a95b4 !important;
-}
-
-/* Nav buttons inside sidebar */
 [data-testid="stSidebar"] .stButton > button {
     width: 100% !important;
     text-align: left !important;
@@ -93,15 +60,12 @@ button[data-testid="baseButton-headerNoPadding"],
 [data-testid="stSidebar"] .stButton > button:focus {
     box-shadow: none !important; outline: none !important;
 }
-/* Active button — highlighted */
 [data-testid="stSidebar"] div.nav-active .stButton > button {
     background: rgba(37,99,235,0.22) !important;
     border-color: rgba(59,130,246,0.55) !important;
     color: #60a5fa !important;
     font-weight: 700 !important;
 }
-
-/* Selectbox in sidebar */
 [data-testid="stSidebar"] .stSelectbox > div > div {
     background: #0d1829 !important;
     border-color: #1a2744 !important;
@@ -117,32 +81,7 @@ button[data-testid="baseButton-headerNoPadding"],
     font-weight: 700 !important;
 }
 
-/* ══════════════════════════════════════
-   TOPBAR — decorative header only
-   (hamburger = Streamlit native toggle)
-══════════════════════════════════════ */
-.topbar {
-    background: #0a0f1e;
-    border-bottom: 1px solid #1a2744;
-    padding: 0.85rem 1.5rem 0.85rem 1rem;
-    display: flex; align-items: center; gap: 1rem;
-    margin-bottom: 1.5rem;
-    border-radius: 14px;
-    box-shadow: 0 2px 12px rgba(0,0,0,.2);
-}
-.tb-logo { font-size: 1.05rem; font-weight: 800; color: #f0f6ff; letter-spacing: -.02em; }
-.tb-sub  { font-size: .6rem; color: #2d4a6b; text-transform: uppercase; letter-spacing: .12em; font-weight: 600; margin-top: 2px; }
-.tb-space { flex: 1; }
-.tb-chip {
-    background: rgba(255,255,255,.05); border: 1px solid #1a2744;
-    border-radius: 100px; padding: .3rem 1rem;
-    font-size: .75rem; color: #4b7094;
-}
-.tb-page { color: #60a5fa; font-weight: 700; }
-
-/* ══════════════════════════════════════
-   PAGE CONTENT
-══════════════════════════════════════ */
+/* ── Page content ── */
 .page-header {
     background: linear-gradient(135deg, #0d1b2e 0%, #0f2847 40%, #0e3a6e 100%);
     border-radius: 14px; padding: 1.75rem 2rem; margin-bottom: 1.5rem;
@@ -166,11 +105,7 @@ button[data-testid="baseButton-headerNoPadding"],
 .ph-badge.favorable   { background:rgba(16,185,129,.15); border-color:rgba(16,185,129,.35); color:#34d399; }
 .ph-badge.desfavorable{ background:rgba(239,68,68,.15);  border-color:rgba(239,68,68,.35);  color:#f87171; }
 
-.kpi {
-    background:white; border-radius:14px; padding:1.25rem 1.5rem;
-    border:1px solid #e8eef5; box-shadow:0 2px 8px rgba(0,0,0,.04);
-    position:relative; overflow:hidden;
-}
+.kpi { background:white; border-radius:14px; padding:1.25rem 1.5rem; border:1px solid #e8eef5; box-shadow:0 2px 8px rgba(0,0,0,.04); position:relative; overflow:hidden; }
 .kpi::after { content:''; position:absolute; top:0; left:0; right:0; height:3px; border-radius:14px 14px 0 0; }
 .kpi.blue::after  { background:linear-gradient(90deg,#1a56db,#60a5fa); }
 .kpi.green::after { background:linear-gradient(90deg,#059669,#34d399); }
@@ -211,16 +146,9 @@ button[data-testid="baseButton-headerNoPadding"],
 .stExpander { border:1px solid #e2e8f0 !important; border-radius:12px !important; overflow:hidden !important; margin-bottom:.75rem !important; }
 
 div[data-testid="stForm"] { background:white; border:1px solid #e2e8f0; border-radius:14px; padding:1.75rem; }
-.stTextInput>div>div>input, .stTextArea>div>div>textarea, .stSelectbox>div>div {
-    border-radius:9px !important; border-color:#d1dde8 !important; font-size:.875rem !important; background:#f8fafc !important;
-}
-.stTextInput>div>div>input:focus, .stTextArea>div>div>textarea:focus {
-    border-color:#3b82f6 !important; box-shadow:0 0 0 3px rgba(59,130,246,.12) !important; background:white !important;
-}
-.stTextInput label,.stTextArea label,.stSelectbox label,.stDateInput label {
-    font-size:.75rem !important; font-weight:600 !important; color:#64748b !important;
-    text-transform:uppercase; letter-spacing:.05em !important;
-}
+.stTextInput>div>div>input,.stTextArea>div>div>textarea,.stSelectbox>div>div { border-radius:9px !important; border-color:#d1dde8 !important; font-size:.875rem !important; background:#f8fafc !important; }
+.stTextInput>div>div>input:focus,.stTextArea>div>div>textarea:focus { border-color:#3b82f6 !important; box-shadow:0 0 0 3px rgba(59,130,246,.12) !important; background:white !important; }
+.stTextInput label,.stTextArea label,.stSelectbox label,.stDateInput label { font-size:.75rem !important; font-weight:600 !important; color:#64748b !important; text-transform:uppercase; letter-spacing:.05em !important; }
 .stButton>button { border-radius:9px !important; font-weight:600 !important; font-size:.875rem !important; transition:all .15s !important; }
 .stButton>button[kind="primary"] { background:linear-gradient(135deg,#1d4ed8,#2563eb) !important; border:none !important; box-shadow:0 2px 8px rgba(37,99,235,.3) !important; }
 .stButton>button[kind="primary"]:hover { transform:translateY(-1px) !important; box-shadow:0 4px 16px rgba(37,99,235,.4) !important; }
@@ -379,35 +307,20 @@ def generate_excel_report(aud_row, items_farma, items_tienda, hallazgos, botiqui
 if "page" not in st.session_state:
     st.session_state["page"] = "📊  Dashboard"
 
-# ── TOPBAR — fixed HTML bar with hamburger that toggles native sidebar ────────
-page       = st.session_state["page"]
-page_short = page.split("  ", 1)[1] if "  " in page else page
-today_str  = date.today().strftime("%d/%m/%Y")
+page      = st.session_state["page"]
+today_str = date.today().strftime("%d/%m/%Y")
 
-st.markdown(f"""
-<div class="topbar">
-  <div style="display:flex;flex-direction:column;line-height:1.3;">
-    <div class="tb-logo">🏥 Locatel</div>
-    <div class="tb-sub">Autoinspección · v2.0</div>
-  </div>
-  <div class="tb-space"></div>
-  <div class="tb-chip">
-    <span class="tb-page">{page_short}</span>&nbsp;·&nbsp;{today_str}
-  </div>
-</div>
-""", unsafe_allow_html=True)
-
-# ── SIDEBAR ───────────────────────────────────────────────────────────────────
+# ── SIDEBAR ────────────────────────────────────────────────────────────────────
 with st.sidebar:
-    st.markdown("""
-    <div style='padding:.75rem .5rem .25rem;'>
+    st.markdown(f"""
+    <div style='padding:.75rem .25rem .5rem;'>
       <div style='font-size:1.05rem;font-weight:800;color:#f0f6ff;letter-spacing:-.02em;'>🏥 Locatel</div>
       <div style='font-size:.6rem;color:#2d4a6b;margin-top:2px;text-transform:uppercase;
                   letter-spacing:.12em;font-weight:700;'>Autoinspección · v2.0</div>
     </div>
-    <hr style='border:none;border-top:1px solid #1a2744;margin:.75rem 0 .5rem;'>
+    <hr style='border:none;border-top:1px solid #1a2744;margin:.5rem 0;'>
     <div style='font-size:.6rem;font-weight:700;color:#2d4a6b;text-transform:uppercase;
-                letter-spacing:.1em;padding:.25rem .5rem .4rem;'>Navegación</div>
+                letter-spacing:.1em;padding:.2rem .25rem .4rem;'>Navegación</div>
     """, unsafe_allow_html=True)
 
     nav_items = [
@@ -421,10 +334,8 @@ with st.sidebar:
 
     for icon, label, key in nav_items:
         is_active = st.session_state["page"] == key
-        prefix = "◆" if is_active else "◇"
-        # Wrap active button in a div with the nav-active class
         st.markdown(f"<div class='{'nav-active' if is_active else ''}'>", unsafe_allow_html=True)
-        if st.button(f"{prefix}  {icon}  {label}", key=f"nav_{key}", use_container_width=True):
+        if st.button(f"{icon}  {label}", key=f"nav_{key}", use_container_width=True):
             st.session_state["page"] = key
             st.rerun()
         st.markdown("</div>", unsafe_allow_html=True)
@@ -432,7 +343,7 @@ with st.sidebar:
     st.markdown("""
     <hr style='border:none;border-top:1px solid #1a2744;margin:.75rem 0 .5rem;'>
     <div style='font-size:.6rem;font-weight:700;color:#2d4a6b;text-transform:uppercase;
-                letter-spacing:.1em;padding:.25rem .5rem .4rem;'>Configuración</div>
+                letter-spacing:.1em;padding:.2rem .25rem .4rem;'>Configuración</div>
     """, unsafe_allow_html=True)
 
     conn = get_connection()
@@ -453,10 +364,13 @@ with st.sidebar:
         sel_aud_label = st.selectbox("Auditoría", list(a_opts.keys()))
         sel_aud_id = a_opts[sel_aud_label]
     else:
-        st.markdown("<div style='font-size:.78rem;color:#3b5270;padding:.5rem 0;'>Sin auditorías registradas</div>", unsafe_allow_html=True)
+        st.markdown("<div style='font-size:.78rem;color:#3b5270;padding:.5rem 0;'>Sin auditorías</div>", unsafe_allow_html=True)
         sel_aud_id = None
 
-    st.markdown(f"<hr style='border:none;border-top:1px solid #1a2744;margin:.75rem 0;'><div style='font-size:.62rem;color:#2d4a6b;padding:.25rem .5rem;font-weight:600;'>📅 Hoy · {today_str}</div>", unsafe_allow_html=True)
+    st.markdown(f"<hr style='border:none;border-top:1px solid #1a2744;margin:.75rem 0;'>"
+                f"<div style='font-size:.62rem;color:#2d4a6b;padding:.25rem;font-weight:600;'>📅 {today_str}</div>",
+                unsafe_allow_html=True)
+
 
 # ═══════════════════════════════════════════════════════════
 # PAGE: DASHBOARD
