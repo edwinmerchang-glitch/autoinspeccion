@@ -22,359 +22,233 @@ st.markdown("""
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 * { font-family: 'Inter', sans-serif; box-sizing: border-box; }
 
-/* ─ Layout ─ */
+/* ── Layout ── */
 .main { background: #f0f4f8; }
-.block-container { padding: 1.5rem 2rem 3rem; max-width: 1440px; }
+.block-container { padding: 1rem 2rem 3rem; max-width: 1440px; margin-top: 56px; }
 
-/* ─ Hide native sidebar & header ─ */
-[data-testid="stSidebar"] { display: none !important; }
-[data-testid="stSidebarCollapsedControl"] { display: none !important; }
-[data-testid="collapsedControl"] { display: none !important; }
+/* ── Hide Streamlit chrome ── */
+#MainMenu, footer { visibility: hidden; }
+.stDeployButton { display: none; }
 header[data-testid="stHeader"] { display: none !important; }
+[data-testid="stSidebarCollapsedControl"] { display: none !important; }
 
-/* ─ Topbar ─ */
+/* ══════════════════════════════════════
+   SIDEBAR → styled as hamburger drawer
+══════════════════════════════════════ */
+[data-testid="stSidebar"] {
+    background: #0a0f1e !important;
+    border-right: 1px solid #1a2744 !important;
+    top: 56px !important;
+    box-shadow: 4px 0 24px rgba(0,0,0,.35) !important;
+}
+[data-testid="stSidebar"] > div:first-child {
+    padding-top: 1rem !important;
+}
+[data-testid="stSidebar"] * { color: #c8d6e5 !important; }
+
+/* Nav buttons inside sidebar */
+[data-testid="stSidebar"] .stButton > button {
+    width: 100% !important;
+    text-align: left !important;
+    justify-content: flex-start !important;
+    background: transparent !important;
+    border: 1px solid transparent !important;
+    border-radius: 10px !important;
+    padding: 0.65rem 1rem !important;
+    font-size: 0.9rem !important;
+    font-weight: 500 !important;
+    color: #7a95b4 !important;
+    transition: all 0.15s ease !important;
+    box-shadow: none !important;
+    margin-bottom: 3px !important;
+}
+[data-testid="stSidebar"] .stButton > button:hover {
+    background: rgba(56,139,253,0.1) !important;
+    border-color: rgba(56,139,253,0.25) !important;
+    color: #93c5fd !important;
+    transform: translateX(2px) !important;
+}
+[data-testid="stSidebar"] .stButton > button:focus {
+    box-shadow: none !important; outline: none !important;
+}
+div.nav-active [data-testid="stSidebar"] .stButton > button,
+[data-testid="stSidebar"] div.nav-active .stButton > button {
+    background: rgba(37,99,235,0.22) !important;
+    border-color: rgba(59,130,246,0.55) !important;
+    color: #60a5fa !important;
+    font-weight: 700 !important;
+}
+
+/* Selectbox in sidebar */
+[data-testid="stSidebar"] .stSelectbox > div > div {
+    background: #0d1829 !important;
+    border-color: #1a2744 !important;
+    color: #c8d6e5 !important;
+    border-radius: 9px !important;
+    font-size: 0.82rem !important;
+}
+[data-testid="stSidebar"] .stSelectbox label {
+    font-size: 0.65rem !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.1em !important;
+    color: #2d4a6b !important;
+    font-weight: 700 !important;
+}
+[data-testid="stSidebar"] .stSelectbox svg { color: #3b5270 !important; }
+
+/* Sidebar section labels */
+.sdiv-lbl {
+    font-size: .62rem; font-weight: 700; color: #2d4a6b;
+    text-transform: uppercase; letter-spacing: .1em;
+    padding: .75rem 1rem .3rem;
+}
+.sdiv { border: none; border-top: 1px solid #1a2744; margin: .6rem .5rem; }
+
+/* ══════════════════════════════════════
+   TOPBAR (fixed)
+══════════════════════════════════════ */
 .topbar {
     position: fixed; top: 0; left: 0; right: 0; z-index: 9999;
     background: #0a0f1e;
     border-bottom: 1px solid #1a2744;
     height: 56px;
     display: flex; align-items: center;
-    padding: 0 1.5rem;
-    gap: 1rem;
+    padding: 0 1.25rem; gap: .9rem;
+    box-shadow: 0 2px 12px rgba(0,0,0,.3);
 }
-.topbar-logo {
-    font-size: 1rem; font-weight: 800; color: #f0f6ff;
-    letter-spacing: -.02em; white-space: nowrap;
+.tb-logo { font-size: 1rem; font-weight: 800; color: #f0f6ff; letter-spacing: -.02em; }
+.tb-sub  { font-size: .6rem; color: #2d4a6b; text-transform: uppercase; letter-spacing: .1em; font-weight: 600; }
+.tb-space { flex: 1; }
+.tb-chip {
+    background: rgba(255,255,255,.05); border: 1px solid #1a2744;
+    border-radius: 100px; padding: .3rem .85rem;
+    font-size: .75rem; color: #4b7094; white-space: nowrap;
 }
-.topbar-logo span { font-size: .65rem; color: #3b5270; font-weight: 600;
-    text-transform: uppercase; letter-spacing: .1em; display: block; margin-top: 1px; }
-.topbar-spacer { flex: 1; }
-.topbar-info { font-size: .75rem; color: #3b5270; white-space: nowrap; }
+.tb-page { color: #60a5fa !important; font-weight: 600; }
 
-/* ─ Hamburger button ─ */
-.ham-btn {
-    background: none; border: 1px solid #1a2744; border-radius: 8px;
-    cursor: pointer; padding: 7px 9px; display: flex; flex-direction: column;
-    gap: 4px; transition: border-color .2s;
+/* Hamburger button */
+.ham {
+    width: 38px; height: 38px;
+    background: rgba(255,255,255,.04);
+    border: 1px solid #1a2744;
+    border-radius: 9px; cursor: pointer;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 5px;
+    transition: border-color .2s, background .2s; flex-shrink: 0;
 }
-.ham-btn:hover { border-color: #3b82f6; }
-.ham-btn span {
-    display: block; width: 20px; height: 2px;
+.ham:hover { border-color: #3b82f6; background: rgba(59,130,246,.08); }
+.ham span {
+    display: block; width: 18px; height: 1.5px;
     background: #7a95b4; border-radius: 2px;
     transition: all .25s cubic-bezier(.4,0,.2,1);
+    transform-origin: center;
 }
-.ham-btn.open span:nth-child(1) { transform: translateY(6px) rotate(45deg); background: #60a5fa; }
-.ham-btn.open span:nth-child(2) { opacity: 0; transform: scaleX(0); }
-.ham-btn.open span:nth-child(3) { transform: translateY(-6px) rotate(-45deg); background: #60a5fa; }
+/* open state set via JS */
+.ham.is-open span:nth-child(1) { transform: translateY(6.5px) rotate(45deg); background: #60a5fa; width: 20px; }
+.ham.is-open span:nth-child(2) { opacity: 0; transform: scaleX(0); }
+.ham.is-open span:nth-child(3) { transform: translateY(-6.5px) rotate(-45deg); background: #60a5fa; width: 20px; }
 
-/* ─ Drawer overlay ─ */
-.drawer-overlay {
-    position: fixed; inset: 0; z-index: 9998;
-    background: rgba(0,0,0,.45);
-    opacity: 0; pointer-events: none;
-    transition: opacity .25s;
-}
-.drawer-overlay.open { opacity: 1; pointer-events: all; }
-
-/* ─ Drawer panel ─ */
-.drawer {
-    position: fixed; top: 0; left: 0; bottom: 0; z-index: 9999;
-    width: 260px;
-    background: #0a0f1e;
-    border-right: 1px solid #1a2744;
-    transform: translateX(-100%);
-    transition: transform .28s cubic-bezier(.4,0,.2,1);
-    display: flex; flex-direction: column;
-    padding-top: 56px;
-}
-.drawer.open { transform: translateX(0); }
-.drawer-inner { padding: 1rem .75rem; flex: 1; overflow-y: auto; }
-.drawer-section-lbl {
-    font-size: .62rem; font-weight: 700; color: #2d4a6b;
-    text-transform: uppercase; letter-spacing: .1em;
-    padding: .5rem .6rem .3rem; margin-bottom: .2rem;
-}
-.nav-btn {
-    display: flex; align-items: center; gap: .7rem;
-    width: 100%; padding: .6rem .85rem;
-    border-radius: 10px; border: 1px solid transparent;
-    background: transparent; cursor: pointer;
-    font-size: .875rem; font-weight: 500; color: #7a95b4;
-    text-align: left; transition: all .15s ease;
-    margin-bottom: 2px;
-}
-.nav-btn:hover { background: rgba(56,139,253,.08); border-color: rgba(56,139,253,.2); color: #93c5fd; }
-.nav-btn.active { background: rgba(37,99,235,.2); border-color: rgba(59,130,246,.5); color: #60a5fa; font-weight: 600; }
-.nav-btn .nav-icon { font-size: 1rem; width: 20px; text-align: center; }
-.nav-btn .nav-lbl  { flex: 1; }
-.nav-btn .nav-dot  { width: 6px; height: 6px; border-radius: 50%; background: #3b82f6; opacity: 0; }
-.nav-btn.active .nav-dot { opacity: 1; }
-.drawer-divider { border: none; border-top: 1px solid #1a2744; margin: .6rem 0; }
-.drawer-footer {
-    padding: .75rem 1.25rem 1.25rem;
-    font-size: .65rem; color: #2d4a6b; font-weight: 600;
-    text-transform: uppercase; letter-spacing: .08em;
-    border-top: 1px solid #1a2744;
-}
-
-/* ─ Selects in drawer ─ */
-.drawer .stSelectbox > div > div {
-    background: #0f1a2e !important; border-color: #1a2744 !important;
-    color: #c8d6e5 !important; border-radius: 9px !important;
-}
-.drawer .stSelectbox label {
-    font-size: .68rem !important; text-transform: uppercase;
-    letter-spacing: .09em; color: #3b5270 !important; font-weight: 700;
-}
-
-/* ─ Push content below fixed topbar ─ */
-.block-container { padding-top: 72px !important; }
-
-/* ─ Header Banner ─ */
+/* ══════════════════════════════════════
+   PAGE CONTENT CARDS, KPIs, etc.
+══════════════════════════════════════ */
 .page-header {
     background: linear-gradient(135deg, #0d1b2e 0%, #0f2847 40%, #0e3a6e 100%);
-    border-radius: 14px;
-    padding: 1.75rem 2rem;
-    margin-bottom: 1.5rem;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    box-shadow: 0 8px 32px rgba(10,25,60,0.3), inset 0 1px 0 rgba(255,255,255,0.05);
-    border: 1px solid rgba(56,139,253,0.15);
-    position: relative;
-    overflow: hidden;
+    border-radius: 14px; padding: 1.75rem 2rem; margin-bottom: 1.5rem;
+    display: flex; align-items: center; justify-content: space-between;
+    box-shadow: 0 8px 32px rgba(10,25,60,.3), inset 0 1px 0 rgba(255,255,255,.05);
+    border: 1px solid rgba(56,139,253,.15); position: relative; overflow: hidden;
 }
 .page-header::before {
-    content: '';
-    position: absolute; top: -40%; right: -5%;
-    width: 300px; height: 300px;
-    background: radial-gradient(circle, rgba(56,139,253,0.12) 0%, transparent 70%);
-    pointer-events: none;
+    content:''; position:absolute; top:-40%; right:-5%;
+    width:300px; height:300px;
+    background:radial-gradient(circle,rgba(56,139,253,.12) 0%,transparent 70%);
+    pointer-events:none;
 }
-.ph-title { color: #f0f6ff; font-size: 1.6rem; font-weight: 800; letter-spacing: -0.02em; }
-.ph-sub { color: #6b8fba; font-size: 0.85rem; margin-top: 4px; }
-.ph-badges { display: flex; gap: 0.6rem; flex-wrap: wrap; align-items: center; }
+.ph-title { color:#f0f6ff; font-size:1.6rem; font-weight:800; letter-spacing:-.02em; }
+.ph-sub   { color:#6b8fba; font-size:.85rem; margin-top:4px; }
+.ph-badges { display:flex; gap:.6rem; flex-wrap:wrap; align-items:center; }
 .ph-badge {
-    padding: 0.35rem 0.9rem;
-    border-radius: 100px;
-    font-size: 0.78rem;
-    font-weight: 600;
-    backdrop-filter: blur(8px);
-    border: 1px solid rgba(255,255,255,0.12);
-    color: #c8d6e5;
-    background: rgba(255,255,255,0.06);
+    padding:.35rem .9rem; border-radius:100px; font-size:.78rem; font-weight:600;
+    border:1px solid rgba(255,255,255,.12); color:#c8d6e5; background:rgba(255,255,255,.06);
 }
-.ph-badge.favorable { background: rgba(16,185,129,0.15); border-color: rgba(16,185,129,0.35); color: #34d399; }
-.ph-badge.desfavorable { background: rgba(239,68,68,0.15); border-color: rgba(239,68,68,0.35); color: #f87171; }
+.ph-badge.favorable   { background:rgba(16,185,129,.15); border-color:rgba(16,185,129,.35); color:#34d399; }
+.ph-badge.desfavorable{ background:rgba(239,68,68,.15);  border-color:rgba(239,68,68,.35);  color:#f87171; }
 
-/* ─ KPI Cards ─ */
 .kpi {
-    background: white;
-    border-radius: 14px;
-    padding: 1.25rem 1.5rem;
-    border: 1px solid #e8eef5;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-    position: relative; overflow: hidden;
+    background:white; border-radius:14px; padding:1.25rem 1.5rem;
+    border:1px solid #e8eef5; box-shadow:0 2px 8px rgba(0,0,0,.04);
+    position:relative; overflow:hidden;
 }
-.kpi::after {
-    content:''; position:absolute; top:0; left:0; right:0; height:3px;
-    border-radius:14px 14px 0 0;
-}
-.kpi.blue::after  { background: linear-gradient(90deg,#1a56db,#60a5fa); }
-.kpi.green::after { background: linear-gradient(90deg,#059669,#34d399); }
-.kpi.red::after   { background: linear-gradient(90deg,#dc2626,#f87171); }
-.kpi.amber::after { background: linear-gradient(90deg,#b45309,#fbbf24); }
-.kpi.purple::after{ background: linear-gradient(90deg,#7c3aed,#a78bfa); }
-.kpi-lbl { font-size:0.7rem; font-weight:700; color:#94a3b8; text-transform:uppercase; letter-spacing:.07em; margin-bottom:.5rem; }
-.kpi-val { font-size:1.75rem; font-weight:800; color:#0f172a; line-height:1.1; letter-spacing:-0.01em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.kpi-sub { font-size:0.76rem; color:#94a3b8; margin-top:4px; }
-.kpi-icon { position:absolute; right:1.25rem; top:50%; transform:translateY(-50%); font-size:2rem; opacity:0.12; }
-.kpi-val.val-green   { color:#059669; }
-.kpi-val.val-amber   { color:#b45309; }
-.kpi-val.val-red     { color:#dc2626; }
-.kpi-val.val-blue    { color:#1a56db; }
-.kpi-val.val-purple  { color:#7c3aed; }
+.kpi::after { content:''; position:absolute; top:0; left:0; right:0; height:3px; border-radius:14px 14px 0 0; }
+.kpi.blue::after  { background:linear-gradient(90deg,#1a56db,#60a5fa); }
+.kpi.green::after { background:linear-gradient(90deg,#059669,#34d399); }
+.kpi.red::after   { background:linear-gradient(90deg,#dc2626,#f87171); }
+.kpi.amber::after { background:linear-gradient(90deg,#b45309,#fbbf24); }
+.kpi.purple::after{ background:linear-gradient(90deg,#7c3aed,#a78bfa); }
+.kpi-lbl { font-size:.7rem; font-weight:700; color:#94a3b8; text-transform:uppercase; letter-spacing:.07em; margin-bottom:.5rem; }
+.kpi-val { font-size:1.75rem; font-weight:800; color:#0f172a; line-height:1.1; letter-spacing:-.01em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.kpi-sub { font-size:.76rem; color:#94a3b8; margin-top:4px; }
+.kpi-val.val-green  { color:#059669; }
+.kpi-val.val-amber  { color:#b45309; }
+.kpi-val.val-red    { color:#dc2626; }
+.kpi-val.val-blue   { color:#1a56db; }
+.kpi-val.val-purple { color:#7c3aed; }
 
-/* ─ Cards ─ */
-.card {
-    background: white;
-    border-radius: 14px;
-    padding: 1.5rem;
-    border: 1px solid #e8eef5;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-    margin-bottom: 1.25rem;
-}
-.card-hd {
-    font-size: 0.78rem; font-weight: 700; color: #64748b;
-    text-transform: uppercase; letter-spacing: .07em;
-    margin-bottom: 1rem; padding-bottom: .75rem;
-    border-bottom: 1px solid #f1f5f9;
-    display: flex; align-items: center; justify-content: space-between;
-}
+.card { background:white; border-radius:14px; padding:1.5rem; border:1px solid #e8eef5; box-shadow:0 2px 8px rgba(0,0,0,.04); margin-bottom:1.25rem; }
+.card-hd { font-size:.78rem; font-weight:700; color:#64748b; text-transform:uppercase; letter-spacing:.07em; margin-bottom:1rem; padding-bottom:.75rem; border-bottom:1px solid #f1f5f9; display:flex; align-items:center; justify-content:space-between; }
 
-/* ─ Audit Item Row ─ */
-.audit-item-row {
-    display: grid;
-    grid-template-columns: 1fr 140px 1fr;
-    gap: .75rem;
-    align-items: start;
-    padding: .75rem 1rem;
-    border-radius: 10px;
-    border: 1px solid #f1f5f9;
-    margin-bottom: .5rem;
-    background: #fafbfc;
-    transition: border-color .15s, box-shadow .15s;
-}
-.audit-item-row:hover { border-color: #c7d7f0; box-shadow: 0 2px 8px rgba(26,86,219,.06); }
-.audit-item-row.fail  { border-color: #fecdd3; background: #fff8f8; }
-.audit-item-row.pass  { border-color: #bbf7d0; background: #f8fff9; }
+.audit-item-row { display:grid; grid-template-columns:1fr 140px 1fr; gap:.75rem; align-items:start; padding:.75rem 1rem; border-radius:10px; border:1px solid #f1f5f9; margin-bottom:.5rem; background:#fafbfc; transition:border-color .15s,box-shadow .15s; }
+.audit-item-row:hover { border-color:#c7d7f0; box-shadow:0 2px 8px rgba(26,86,219,.06); }
+.audit-item-row.fail { border-color:#fecdd3; background:#fff8f8; }
+.audit-item-row.pass { border-color:#bbf7d0; background:#f8fff9; }
 .item-name { font-size:.82rem; font-weight:500; color:#334155; line-height:1.4; }
-.item-obs  { font-size:.78rem; color:#94a3b8; font-style:italic; margin-top:3px; }
 
-/* ─ Badges ─ */
-.badge {
-    display:inline-flex; align-items:center; gap:.25rem;
-    padding:.22rem .65rem; border-radius:100px;
-    font-size:.71rem; font-weight:700; letter-spacing:.02em;
-}
-.b-ok   { background:#dcfce7; color:#15803d; }
-.b-fail { background:#fee2e2; color:#b91c1c; }
-.b-warn { background:#fef3c7; color:#92400e; }
-.b-info { background:#dbeafe; color:#1d4ed8; }
-.b-gray { background:#f1f5f9; color:#475569; }
-.b-fav  { background:#d1fae5; color:#065f46; }
+.badge { display:inline-flex; align-items:center; gap:.25rem; padding:.22rem .65rem; border-radius:100px; font-size:.71rem; font-weight:700; letter-spacing:.02em; }
+.b-ok    { background:#dcfce7; color:#15803d; }
+.b-fail  { background:#fee2e2; color:#b91c1c; }
+.b-warn  { background:#fef3c7; color:#92400e; }
+.b-info  { background:#dbeafe; color:#1d4ed8; }
+.b-gray  { background:#f1f5f9; color:#475569; }
+.b-fav   { background:#d1fae5; color:#065f46; }
 .b-desfav{ background:#fee2e2; color:#991b1b; }
-.b-cond { background:#fef3c7; color:#78350f; }
+.b-cond  { background:#fef3c7; color:#78350f; }
 
-/* ─ Progress ─ */
 .pb-wrap { background:#f1f5f9; border-radius:100px; height:7px; overflow:hidden; }
 .pb-fill { height:100%; border-radius:100px; transition:width .4s ease; }
 
-/* ─ Section Expander ─ */
 .stExpander { border:1px solid #e2e8f0 !important; border-radius:12px !important; overflow:hidden !important; margin-bottom:.75rem !important; }
-.stExpander summary { font-weight:600 !important; font-size:.875rem !important; }
 
-/* ─ Form Inputs ─ */
-div[data-testid="stForm"] {
-    background: white;
-    border: 1px solid #e2e8f0;
-    border-radius: 14px;
-    padding: 1.75rem;
+div[data-testid="stForm"] { background:white; border:1px solid #e2e8f0; border-radius:14px; padding:1.75rem; }
+.stTextInput>div>div>input, .stTextArea>div>div>textarea, .stSelectbox>div>div {
+    border-radius:9px !important; border-color:#d1dde8 !important; font-size:.875rem !important; background:#f8fafc !important;
 }
-.stTextInput > div > div > input,
-.stTextArea > div > div > textarea,
-.stSelectbox > div > div {
-    border-radius: 9px !important;
-    border-color: #d1dde8 !important;
-    font-size: .875rem !important;
-    background: #f8fafc !important;
-    transition: border-color .15s, box-shadow .15s !important;
+.stTextInput>div>div>input:focus, .stTextArea>div>div>textarea:focus {
+    border-color:#3b82f6 !important; box-shadow:0 0 0 3px rgba(59,130,246,.12) !important; background:white !important;
 }
-.stTextInput > div > div > input:focus,
-.stTextArea > div > div > textarea:focus {
-    border-color: #3b82f6 !important;
-    box-shadow: 0 0 0 3px rgba(59,130,246,.12) !important;
-    background: white !important;
-}
-.stTextInput label, .stTextArea label, .stSelectbox label, .stDateInput label {
-    font-size: .75rem !important; font-weight: 600 !important;
-    color: #64748b !important; text-transform: uppercase;
-    letter-spacing: .05em !important;
+.stTextInput label,.stTextArea label,.stSelectbox label,.stDateInput label {
+    font-size:.75rem !important; font-weight:600 !important; color:#64748b !important;
+    text-transform:uppercase; letter-spacing:.05em !important;
 }
 
-/* ─ Buttons ─ */
-.stButton > button {
-    border-radius: 9px !important;
-    font-weight: 600 !important;
-    font-size: .875rem !important;
-    transition: all .15s !important;
-}
-.stButton > button[kind="primary"] {
-    background: linear-gradient(135deg,#1d4ed8,#2563eb) !important;
-    border: none !important;
-    box-shadow: 0 2px 8px rgba(37,99,235,.3) !important;
-}
-.stButton > button[kind="primary"]:hover {
-    transform: translateY(-1px) !important;
-    box-shadow: 0 4px 16px rgba(37,99,235,.4) !important;
-}
+.stButton>button { border-radius:9px !important; font-weight:600 !important; font-size:.875rem !important; transition:all .15s !important; }
+.stButton>button[kind="primary"] { background:linear-gradient(135deg,#1d4ed8,#2563eb) !important; border:none !important; box-shadow:0 2px 8px rgba(37,99,235,.3) !important; }
+.stButton>button[kind="primary"]:hover { transform:translateY(-1px) !important; box-shadow:0 4px 16px rgba(37,99,235,.4) !important; }
 
-/* ─ Download button ─ */
-.stDownloadButton > button {
-    border-radius: 9px !important;
-    font-weight: 600 !important;
-    font-size: .82rem !important;
-    background: white !important;
-    border: 1.5px solid #e2e8f0 !important;
-    color: #475569 !important;
-    display: flex; align-items: center; gap: .4rem;
-}
-.stDownloadButton > button:hover {
-    border-color: #3b82f6 !important;
-    color: #1d4ed8 !important;
-    background: #eff6ff !important;
-}
+.stDownloadButton>button { border-radius:9px !important; font-weight:600 !important; font-size:.82rem !important; background:white !important; border:1.5px solid #e2e8f0 !important; color:#475569 !important; }
+.stDownloadButton>button:hover { border-color:#3b82f6 !important; color:#1d4ed8 !important; background:#eff6ff !important; }
 
-/* ─ Radio toggle (pass/fail) ─ */
-div[data-testid="stRadio"] > label { display:none !important; }
-div[data-testid="stRadio"] > div {
-    display:flex; flex-direction:row; gap:.4rem;
-    background:#f1f5f9; border-radius:8px; padding:3px;
-}
-div[data-testid="stRadio"] > div > label {
-    flex:1; text-align:center !important;
-    padding:.35rem .6rem !important;
-    border-radius:6px !important;
-    font-size:.8rem !important; font-weight:600 !important;
-    cursor:pointer !important;
-    border:1px solid transparent !important;
-    margin:0 !important;
-}
-div[data-testid="stRadio"] > div > label[aria-checked="true"] {
-    background:white !important;
-    box-shadow:0 1px 4px rgba(0,0,0,.1) !important;
-}
+div[data-testid="stRadio"]>label { display:none !important; }
+div[data-testid="stRadio"]>div { display:flex; flex-direction:row; gap:.4rem; background:#f1f5f9; border-radius:8px; padding:3px; }
+div[data-testid="stRadio"]>div>label { flex:1; text-align:center !important; padding:.35rem .6rem !important; border-radius:6px !important; font-size:.8rem !important; font-weight:600 !important; cursor:pointer !important; border:1px solid transparent !important; margin:0 !important; }
+div[data-testid="stRadio"]>div>label[aria-checked="true"] { background:white !important; box-shadow:0 1px 4px rgba(0,0,0,.1) !important; }
 
-/* ─ Tabs ─ */
-.stTabs [data-baseweb="tab-list"] {
-    background:#f1f5f9; border-radius:10px; padding:3px; gap:0; border:none;
-}
-.stTabs [data-baseweb="tab"] {
-    border-radius:8px; padding:.45rem 1.2rem;
-    font-weight:500; font-size:.85rem; color:#64748b;
-    background:transparent; border:none;
-}
-.stTabs [aria-selected="true"] {
-    background:white !important; color:#1d4ed8 !important;
-    box-shadow:0 1px 4px rgba(0,0,0,.1);
-}
+.stTabs [data-baseweb="tab-list"] { background:#f1f5f9; border-radius:10px; padding:3px; gap:0; border:none; }
+.stTabs [data-baseweb="tab"] { border-radius:8px; padding:.45rem 1.2rem; font-weight:500; font-size:.85rem; color:#64748b; background:transparent; border:none; }
+.stTabs [aria-selected="true"] { background:white !important; color:#1d4ed8 !important; box-shadow:0 1px 4px rgba(0,0,0,.1); }
 
-/* ─ Divider ─ */
-.sdiv { border:none; border-top:1px solid #1e2d45; margin:.75rem 0; }
-
-/* ─ Success/info banners ─ */
-.info-banner {
-    background:#eff6ff; border:1px solid #bfdbfe; border-radius:10px;
-    padding:1rem 1.25rem; color:#1e40af; font-size:.85rem;
-    display:flex; align-items:center; gap:.75rem; margin-bottom:1rem;
-}
-.success-banner {
-    background:#f0fdf4; border:1px solid #bbf7d0; border-radius:10px;
-    padding:1rem 1.25rem; color:#15803d; font-size:.85rem;
-    display:flex; align-items:center; gap:.75rem; margin-bottom:1rem;
-}
-
-/* ─ Form section label ─ */
-.form-section-label {
-    font-size:.7rem; font-weight:700; color:#94a3b8;
-    text-transform:uppercase; letter-spacing:.08em;
-    margin: 1.25rem 0 .75rem; padding-top:.75rem;
-    border-top:1px solid #f1f5f9;
-}
-
-/* ─ Hide Streamlit chrome ─ */
-#MainMenu, footer, header { visibility:hidden; }
-.stDeployButton { display:none; }
+.info-banner { background:#eff6ff; border:1px solid #bfdbfe; border-radius:10px; padding:1rem 1.25rem; color:#1e40af; font-size:.85rem; display:flex; align-items:center; gap:.75rem; margin-bottom:1rem; }
+.success-banner { background:#f0fdf4; border:1px solid #bbf7d0; border-radius:10px; padding:1rem 1.25rem; color:#15803d; font-size:.85rem; display:flex; align-items:center; gap:.75rem; margin-bottom:1rem; }
+.form-section-label { font-size:.7rem; font-weight:700; color:#94a3b8; text-transform:uppercase; letter-spacing:.08em; margin:1.25rem 0 .75rem; padding-top:.75rem; border-top:1px solid #f1f5f9; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -511,125 +385,131 @@ def generate_excel_report(aud_row, items_farma, items_tienda, hallazgos, botiqui
     buf.seek(0)
     return buf
 
-# ── SESSION STATE ────────────────────────────────────────────────────────────
+# ── SESSION STATE ─────────────────────────────────────────────────────────────
 if "page" not in st.session_state:
     st.session_state["page"] = "📊  Dashboard"
-if "menu_open" not in st.session_state:
-    st.session_state["menu_open"] = False
 
-nav_items = [
-    ("📊", "Dashboard",        "📊  Dashboard"),
-    ("💊", "Auditoría Farma",  "💊  Auditoría Farma"),
-    ("🏪", "Auditoría Tienda", "🏪  Auditoría Tienda"),
-    ("⚠️", "Hallazgos",        "⚠️  Hallazgos"),
-    ("🩺", "Botiquín",         "🩺  Botiquín"),
-    ("➕", "Nueva Auditoría",  "➕  Nueva Auditoría"),
-]
-
-# ── TOPBAR (fixed, rendered via HTML) ────────────────────────────────────────
-page = st.session_state["page"]
+# ── TOPBAR — fixed HTML bar with hamburger that toggles native sidebar ────────
+page       = st.session_state["page"]
 page_short = page.split("  ", 1)[1] if "  " in page else page
-today_str = date.today().strftime("%d/%m/%Y")
-
-ham_cls = "open" if st.session_state["menu_open"] else ""
+today_str  = date.today().strftime("%d/%m/%Y")
 
 st.markdown(f"""
-<div class="topbar">
-  <button class="ham-btn {ham_cls}" onclick="toggleMenu()" id="hamBtn" aria-label="Menú">
+<div class="topbar" id="topbar">
+  <button class="ham" id="hamBtn" onclick="toggleSidebar()" aria-label="Abrir menú">
     <span></span><span></span><span></span>
   </button>
-  <div>
-    <div class="topbar-logo">🏥 Locatel <span>Autoinspección · v2.0</span></div>
+  <div style="display:flex;flex-direction:column;justify-content:center;">
+    <div class="tb-logo">🏥 Locatel</div>
+    <div class="tb-sub">Autoinspección · v2.0</div>
   </div>
-  <div class="topbar-spacer"></div>
-  <div class="topbar-info">📍 {page_short} &nbsp;·&nbsp; {today_str}</div>
+  <div class="tb-space"></div>
+  <div class="tb-chip"><span class="tb-page">{page_short}</span> &nbsp;·&nbsp; {today_str}</div>
 </div>
-""", unsafe_allow_html=True)
 
-# ── TIENDA / AUDITORÍA selectors (always loaded for state) ───────────────────
-conn = get_connection()
-tiendas_df = pd.read_sql("SELECT id, nombre FROM tiendas ORDER BY id", conn)
-conn.close()
-t_opts = {f"{r['id']} - {r['nombre']}": r['id'] for _, r in tiendas_df.iterrows()}
-
-conn = get_connection()
-auds_all = pd.read_sql("SELECT id,tienda_id,fecha,auditor,calificacion_global,resultado FROM auditorias ORDER BY fecha DESC", conn)
-conn.close()
-
-# ── DRAWER (nav buttons rendered as Streamlit buttons, shown/hidden via CSS) ─
-drawer_open_cls = "open" if st.session_state["menu_open"] else ""
-
-# Overlay — clicking it closes menu
-st.markdown(f"""
-<div class="drawer-overlay {drawer_open_cls}" onclick="closeMenu()" id="drawerOverlay"></div>
-<div class="drawer {drawer_open_cls}" id="navDrawer">
-  <div class="drawer-inner">
-    <div class="drawer-section-lbl">Navegación</div>
-""", unsafe_allow_html=True)
-
-for icon, label, key in nav_items:
-    is_active = st.session_state["page"] == key
-    active_cls = "active" if is_active else ""
-    if st.button(
-        f"{icon}  {label}",
-        key=f"nav_{key}",
-        use_container_width=True,
-        help=label,
-    ):
-        st.session_state["page"] = key
-        st.session_state["menu_open"] = False
-        st.rerun()
-
-st.markdown("""
-    <hr class="drawer-divider">
-    <div class="drawer-section-lbl">Configuración</div>
-""", unsafe_allow_html=True)
-
-# Tienda selector inside drawer
-sel_label = st.selectbox("Tienda", list(t_opts.keys()), index=2, key="sel_tienda_drw")
-sel_tienda = t_opts[sel_label]
-
-auds = auds_all[auds_all["tienda_id"] == sel_tienda]
-if len(auds):
-    a_opts = {f"{r['fecha']}  ·  {r['auditor']}": r['id'] for _, r in auds.iterrows()}
-    sel_aud_label = st.selectbox("Auditoría", list(a_opts.keys()), key="sel_aud_drw")
-    sel_aud_id = a_opts[sel_aud_label]
-else:
-    st.markdown("<div style='font-size:.78rem;color:#3b5270;padding:.5rem .6rem;'>Sin auditorías registradas</div>", unsafe_allow_html=True)
-    sel_aud_id = None
-
-st.markdown(f"""
-  </div>
-  <div class="drawer-footer">Hoy · {today_str}</div>
-</div>
-""", unsafe_allow_html=True)
-
-# ── Hamburger toggle button (Streamlit) ──────────────────────────────────────
-# JS handles visual toggle; Streamlit button syncs state on next rerun
-st.markdown("""
 <script>
-function toggleMenu() {
-    var drawer  = document.getElementById('navDrawer');
-    var overlay = document.getElementById('drawerOverlay');
-    var btn     = document.getElementById('hamBtn');
-    var isOpen  = drawer.classList.contains('open');
-    if (isOpen) {
-        drawer.classList.remove('open');
-        overlay.classList.remove('open');
-        btn.classList.remove('open');
-    } else {
-        drawer.classList.add('open');
-        overlay.classList.add('open');
-        btn.classList.add('open');
-    }
-}
-function closeMenu() {
-    document.getElementById('navDrawer').classList.remove('open');
-    document.getElementById('drawerOverlay').classList.remove('open');
-    document.getElementById('hamBtn').classList.remove('open');
-}
+(function() {{
+  function toggleSidebar() {{
+    var btn = document.getElementById('hamBtn');
+    // Find Streamlit sidebar toggle button and click it
+    var toggle = window.parent.document.querySelector('[data-testid="collapsedControl"]')
+               || window.parent.document.querySelector('button[kind="header"]')
+               || window.parent.document.querySelector('[data-testid="stSidebarCollapsedControl"]');
+
+    // Directly toggle sidebar visibility via class on body
+    var sidebar = window.parent.document.querySelector('[data-testid="stSidebar"]');
+    if (!sidebar) return;
+    var isHidden = sidebar.style.transform === 'translateX(-110%)' || 
+                   sidebar.getAttribute('aria-expanded') === 'false' ||
+                   sidebar.classList.contains('st-emotion-cache-hidden');
+    
+    // Use Streamlit's internal toggle
+    var nativeBtn = window.parent.document.querySelector('button[data-testid="baseButton-header"]')
+                  || window.parent.document.querySelector('[aria-controls="bui3-tabpanel-0"]');
+    
+    // Fallback: directly manipulate sidebar style
+    if (!sidebar._stToggled) sidebar._stToggled = false;
+    if (sidebar._stToggled) {{
+      sidebar.style.cssText = '';
+      sidebar._stToggled = false;
+      btn.classList.remove('is-open');
+    }} else {{
+      sidebar.style.cssText = 'display:block!important;transform:translateX(0)!important;visibility:visible!important;';
+      sidebar._stToggled = true;
+      btn.classList.add('is-open');
+    }}
+  }}
+  window.toggleSidebar = toggleSidebar;
+
+  // Auto-hide sidebar on load
+  window.addEventListener('load', function() {{
+    setTimeout(function() {{
+      var sidebar = window.parent.document.querySelector('[data-testid="stSidebar"]');
+      if (sidebar) sidebar.style.cssText = '';
+    }}, 100);
+  }});
+}})();
 </script>
 """, unsafe_allow_html=True)
+
+# ── SIDEBAR — real Streamlit sidebar acting as the drawer ─────────────────────
+with st.sidebar:
+    st.markdown("""
+    <div style='padding:.5rem .25rem 1rem;'>
+      <div style='font-size:.6rem;font-weight:700;color:#2d4a6b;text-transform:uppercase;
+                  letter-spacing:.1em;margin-bottom:.75rem;'>Navegación</div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    nav_items = [
+        ("📊", "Dashboard",        "📊  Dashboard"),
+        ("💊", "Auditoría Farma",  "💊  Auditoría Farma"),
+        ("🏪", "Auditoría Tienda", "🏪  Auditoría Tienda"),
+        ("⚠️", "Hallazgos",        "⚠️  Hallazgos"),
+        ("🩺", "Botiquín",         "🩺  Botiquín"),
+        ("➕", "Nueva Auditoría",  "➕  Nueva Auditoría"),
+    ]
+
+    for icon, label, key in nav_items:
+        is_active = st.session_state["page"] == key
+        # Inject active class wrapper via markdown
+        if is_active:
+            st.markdown("""<style>
+            [data-testid="stSidebar"] div:has(> div > div > button[data-active="true"]) button {
+                background: rgba(37,99,235,.22) !important;
+                border-color: rgba(59,130,246,.55) !important;
+                color: #60a5fa !important; font-weight: 700 !important;
+            }</style>""", unsafe_allow_html=True)
+        btn_label = f"{'▶  ' if is_active else '    '}{icon}  {label}"
+        if st.button(btn_label, key=f"nav_{key}", use_container_width=True):
+            st.session_state["page"] = key
+            st.rerun()
+
+    st.markdown("<hr style='border:none;border-top:1px solid #1a2744;margin:.75rem 0;'>", unsafe_allow_html=True)
+    st.markdown("<div style='font-size:.6rem;font-weight:700;color:#2d4a6b;text-transform:uppercase;letter-spacing:.1em;margin-bottom:.5rem;'>Configuración</div>", unsafe_allow_html=True)
+
+    conn = get_connection()
+    tiendas_df = pd.read_sql("SELECT id, nombre FROM tiendas ORDER BY id", conn)
+    conn.close()
+    t_opts = {f"{r['id']} - {r['nombre']}": r['id'] for _, r in tiendas_df.iterrows()}
+    sel_label = st.selectbox("Tienda", list(t_opts.keys()), index=2)
+    sel_tienda = t_opts[sel_label]
+
+    conn = get_connection()
+    auds = pd.read_sql(
+        "SELECT id,fecha,auditor,calificacion_global,resultado FROM auditorias WHERE tienda_id=? ORDER BY fecha DESC",
+        conn, params=(sel_tienda,))
+    conn.close()
+
+    if len(auds):
+        a_opts = {f"{r['fecha']}  ·  {r['auditor']}": r['id'] for _, r in auds.iterrows()}
+        sel_aud_label = st.selectbox("Auditoría", list(a_opts.keys()))
+        sel_aud_id = a_opts[sel_aud_label]
+    else:
+        st.markdown("<div style='font-size:.78rem;color:#3b5270;padding:.5rem 0;'>Sin auditorías registradas</div>", unsafe_allow_html=True)
+        sel_aud_id = None
+
+    st.markdown(f"<div style='font-size:.62rem;color:#2d4a6b;padding:1rem 0 .5rem;font-weight:600;'>Hoy · {today_str}</div>", unsafe_allow_html=True)
 
 # ═══════════════════════════════════════════════════════════
 # PAGE: DASHBOARD
