@@ -13,7 +13,7 @@ st.set_page_config(
     page_title="Autoinspección Locatel",
     page_icon="🏥",
     layout="wide",
-    initial_sidebar_state="expanded",
+    initial_sidebar_state="collapsed",
 )
 
 # ── GLOBAL CSS ───────────────────────────────────────────────────────────────
@@ -26,60 +26,109 @@ st.markdown("""
 .main { background: #f0f4f8; }
 .block-container { padding: 1.5rem 2rem 3rem; max-width: 1440px; }
 
-/* ─ Sidebar base ─ */
-[data-testid="stSidebar"] {
-    background: #0a0f1e !important;
+/* ─ Hide native sidebar & header ─ */
+[data-testid="stSidebar"] { display: none !important; }
+[data-testid="stSidebarCollapsedControl"] { display: none !important; }
+[data-testid="collapsedControl"] { display: none !important; }
+header[data-testid="stHeader"] { display: none !important; }
+
+/* ─ Topbar ─ */
+.topbar {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 9999;
+    background: #0a0f1e;
+    border-bottom: 1px solid #1a2744;
+    height: 56px;
+    display: flex; align-items: center;
+    padding: 0 1.5rem;
+    gap: 1rem;
+}
+.topbar-logo {
+    font-size: 1rem; font-weight: 800; color: #f0f6ff;
+    letter-spacing: -.02em; white-space: nowrap;
+}
+.topbar-logo span { font-size: .65rem; color: #3b5270; font-weight: 600;
+    text-transform: uppercase; letter-spacing: .1em; display: block; margin-top: 1px; }
+.topbar-spacer { flex: 1; }
+.topbar-info { font-size: .75rem; color: #3b5270; white-space: nowrap; }
+
+/* ─ Hamburger button ─ */
+.ham-btn {
+    background: none; border: 1px solid #1a2744; border-radius: 8px;
+    cursor: pointer; padding: 7px 9px; display: flex; flex-direction: column;
+    gap: 4px; transition: border-color .2s;
+}
+.ham-btn:hover { border-color: #3b82f6; }
+.ham-btn span {
+    display: block; width: 20px; height: 2px;
+    background: #7a95b4; border-radius: 2px;
+    transition: all .25s cubic-bezier(.4,0,.2,1);
+}
+.ham-btn.open span:nth-child(1) { transform: translateY(6px) rotate(45deg); background: #60a5fa; }
+.ham-btn.open span:nth-child(2) { opacity: 0; transform: scaleX(0); }
+.ham-btn.open span:nth-child(3) { transform: translateY(-6px) rotate(-45deg); background: #60a5fa; }
+
+/* ─ Drawer overlay ─ */
+.drawer-overlay {
+    position: fixed; inset: 0; z-index: 9998;
+    background: rgba(0,0,0,.45);
+    opacity: 0; pointer-events: none;
+    transition: opacity .25s;
+}
+.drawer-overlay.open { opacity: 1; pointer-events: all; }
+
+/* ─ Drawer panel ─ */
+.drawer {
+    position: fixed; top: 0; left: 0; bottom: 0; z-index: 9999;
+    width: 260px;
+    background: #0a0f1e;
     border-right: 1px solid #1a2744;
+    transform: translateX(-100%);
+    transition: transform .28s cubic-bezier(.4,0,.2,1);
+    display: flex; flex-direction: column;
+    padding-top: 56px;
 }
-[data-testid="stSidebar"] * { color: #c8d6e5 !important; }
+.drawer.open { transform: translateX(0); }
+.drawer-inner { padding: 1rem .75rem; flex: 1; overflow-y: auto; }
+.drawer-section-lbl {
+    font-size: .62rem; font-weight: 700; color: #2d4a6b;
+    text-transform: uppercase; letter-spacing: .1em;
+    padding: .5rem .6rem .3rem; margin-bottom: .2rem;
+}
+.nav-btn {
+    display: flex; align-items: center; gap: .7rem;
+    width: 100%; padding: .6rem .85rem;
+    border-radius: 10px; border: 1px solid transparent;
+    background: transparent; cursor: pointer;
+    font-size: .875rem; font-weight: 500; color: #7a95b4;
+    text-align: left; transition: all .15s ease;
+    margin-bottom: 2px;
+}
+.nav-btn:hover { background: rgba(56,139,253,.08); border-color: rgba(56,139,253,.2); color: #93c5fd; }
+.nav-btn.active { background: rgba(37,99,235,.2); border-color: rgba(59,130,246,.5); color: #60a5fa; font-weight: 600; }
+.nav-btn .nav-icon { font-size: 1rem; width: 20px; text-align: center; }
+.nav-btn .nav-lbl  { flex: 1; }
+.nav-btn .nav-dot  { width: 6px; height: 6px; border-radius: 50%; background: #3b82f6; opacity: 0; }
+.nav-btn.active .nav-dot { opacity: 1; }
+.drawer-divider { border: none; border-top: 1px solid #1a2744; margin: .6rem 0; }
+.drawer-footer {
+    padding: .75rem 1.25rem 1.25rem;
+    font-size: .65rem; color: #2d4a6b; font-weight: 600;
+    text-transform: uppercase; letter-spacing: .08em;
+    border-top: 1px solid #1a2744;
+}
 
-/* ─ Nav buttons ─ */
-[data-testid="stSidebar"] .stButton > button {
-    width: 100% !important;
-    text-align: left !important;
-    background: transparent !important;
-    border: 1px solid transparent !important;
-    border-radius: 10px !important;
-    padding: 0.6rem 0.9rem !important;
-    font-size: 0.875rem !important;
-    font-weight: 500 !important;
-    color: #7a95b4 !important;
-    transition: all 0.15s ease !important;
-    box-shadow: none !important;
-    margin-bottom: 2px !important;
-    justify-content: flex-start !important;
+/* ─ Selects in drawer ─ */
+.drawer .stSelectbox > div > div {
+    background: #0f1a2e !important; border-color: #1a2744 !important;
+    color: #c8d6e5 !important; border-radius: 9px !important;
 }
-[data-testid="stSidebar"] .stButton > button:hover {
-    background: rgba(56,139,253,0.08) !important;
-    border-color: rgba(56,139,253,0.2) !important;
-    color: #93c5fd !important;
-}
-[data-testid="stSidebar"] .stButton > button:focus {
-    box-shadow: none !important; outline: none !important;
-}
-/* Active nav item wrapper */
-div.nav-active > div > div > button,
-div.nav-active > div > div > button:hover {
-    background: rgba(37,99,235,0.2) !important;
-    border-color: rgba(59,130,246,0.5) !important;
-    color: #60a5fa !important;
-    font-weight: 600 !important;
+.drawer .stSelectbox label {
+    font-size: .68rem !important; text-transform: uppercase;
+    letter-spacing: .09em; color: #3b5270 !important; font-weight: 700;
 }
 
-/* ─ Sidebar selectbox ─ */
-[data-testid="stSidebar"] .stSelectbox > div > div {
-    background: #0f1a2e !important;
-    border-color: #1a2744 !important;
-    color: #c8d6e5 !important;
-    border-radius: 9px !important;
-}
-[data-testid="stSidebar"] .stSelectbox label {
-    font-size: 0.68rem !important;
-    text-transform: uppercase;
-    letter-spacing: 0.09em;
-    color: #3b5270 !important;
-    font-weight: 700;
-}
+/* ─ Push content below fixed topbar ─ */
+.block-container { padding-top: 72px !important; }
 
 /* ─ Header Banner ─ */
 .page-header {
@@ -462,67 +511,125 @@ def generate_excel_report(aud_row, items_farma, items_tienda, hallazgos, botiqui
     buf.seek(0)
     return buf
 
-# ── SIDEBAR ───────────────────────────────────────────────────────────────────
-with st.sidebar:
-    st.markdown("""
-    <div style='padding:1.5rem 1rem .75rem;'>
-      <div style='font-size:1.15rem;font-weight:800;color:#f0f6ff;letter-spacing:-.02em;'>🏥 Locatel</div>
-      <div style='font-size:.68rem;color:#3b5270;margin-top:3px;text-transform:uppercase;letter-spacing:.1em;font-weight:600;'>Autoinspección · v2.0</div>
-    </div>
-    <hr class='sdiv'>
-    """, unsafe_allow_html=True)
+# ── SESSION STATE ────────────────────────────────────────────────────────────
+if "page" not in st.session_state:
+    st.session_state["page"] = "📊  Dashboard"
+if "menu_open" not in st.session_state:
+    st.session_state["menu_open"] = False
 
-    # ── Nav buttons (session-state driven)
-    if "page" not in st.session_state:
-        st.session_state["page"] = "📊  Dashboard"
+nav_items = [
+    ("📊", "Dashboard",        "📊  Dashboard"),
+    ("💊", "Auditoría Farma",  "💊  Auditoría Farma"),
+    ("🏪", "Auditoría Tienda", "🏪  Auditoría Tienda"),
+    ("⚠️", "Hallazgos",        "⚠️  Hallazgos"),
+    ("🩺", "Botiquín",         "🩺  Botiquín"),
+    ("➕", "Nueva Auditoría",  "➕  Nueva Auditoría"),
+]
 
-    nav_items = [
-        ("📊", "Dashboard",        "📊  Dashboard"),
-        ("💊", "Auditoría Farma",  "💊  Auditoría Farma"),
-        ("🏪", "Auditoría Tienda", "🏪  Auditoría Tienda"),
-        ("⚠️", "Hallazgos",        "⚠️  Hallazgos"),
-        ("🩺", "Botiquín",         "🩺  Botiquín"),
-        ("➕", "Nueva Auditoría",  "➕  Nueva Auditoría"),
-    ]
+# ── TOPBAR (fixed, rendered via HTML) ────────────────────────────────────────
+page = st.session_state["page"]
+page_short = page.split("  ", 1)[1] if "  " in page else page
+today_str = date.today().strftime("%d/%m/%Y")
 
-    st.markdown("<div style='margin-bottom:.25rem;'>", unsafe_allow_html=True)
-    for icon, label, key in nav_items:
-        is_active = st.session_state["page"] == key
-        active_css = "nav-active" if is_active else ""
-        st.markdown(f"<div class='{active_css}'>", unsafe_allow_html=True)
-        if st.button(f"{icon}  {label}", key=f"nav_{key}", use_container_width=True):
-            st.session_state["page"] = key
-            st.rerun()
-        st.markdown("</div>", unsafe_allow_html=True)
-    st.markdown("</div>", unsafe_allow_html=True)
+ham_cls = "open" if st.session_state["menu_open"] else ""
 
-    page = st.session_state["page"]
+st.markdown(f"""
+<div class="topbar">
+  <button class="ham-btn {ham_cls}" onclick="toggleMenu()" id="hamBtn" aria-label="Menú">
+    <span></span><span></span><span></span>
+  </button>
+  <div>
+    <div class="topbar-logo">🏥 Locatel <span>Autoinspección · v2.0</span></div>
+  </div>
+  <div class="topbar-spacer"></div>
+  <div class="topbar-info">📍 {page_short} &nbsp;·&nbsp; {today_str}</div>
+</div>
+""", unsafe_allow_html=True)
 
-    st.markdown("<hr class='sdiv'>", unsafe_allow_html=True)
+# ── TIENDA / AUDITORÍA selectors (always loaded for state) ───────────────────
+conn = get_connection()
+tiendas_df = pd.read_sql("SELECT id, nombre FROM tiendas ORDER BY id", conn)
+conn.close()
+t_opts = {f"{r['id']} - {r['nombre']}": r['id'] for _, r in tiendas_df.iterrows()}
 
-    conn = get_connection()
-    tiendas_df = pd.read_sql("SELECT id, nombre FROM tiendas ORDER BY id", conn)
-    conn.close()
-    t_opts = {f"{r['id']} - {r['nombre']}": r['id'] for _, r in tiendas_df.iterrows()}
-    sel_label = st.selectbox("Tienda", list(t_opts.keys()), index=2)
-    sel_tienda = t_opts[sel_label]
+conn = get_connection()
+auds_all = pd.read_sql("SELECT id,tienda_id,fecha,auditor,calificacion_global,resultado FROM auditorias ORDER BY fecha DESC", conn)
+conn.close()
 
-    conn = get_connection()
-    auds = pd.read_sql(
-        "SELECT id,fecha,auditor,calificacion_global,resultado FROM auditorias WHERE tienda_id=? ORDER BY fecha DESC",
-        conn, params=(sel_tienda,))
-    conn.close()
+# ── DRAWER (nav buttons rendered as Streamlit buttons, shown/hidden via CSS) ─
+drawer_open_cls = "open" if st.session_state["menu_open"] else ""
 
-    if len(auds):
-        a_opts = {f"{r['fecha']}  ·  {r['auditor']}": r['id'] for _, r in auds.iterrows()}
-        sel_aud_label = st.selectbox("Auditoría", list(a_opts.keys()))
-        sel_aud_id = a_opts[sel_aud_label]
-    else:
-        st.info("Sin auditorías")
-        sel_aud_id = None
+# Overlay — clicking it closes menu
+st.markdown(f"""
+<div class="drawer-overlay {drawer_open_cls}" onclick="closeMenu()" id="drawerOverlay"></div>
+<div class="drawer {drawer_open_cls}" id="navDrawer">
+  <div class="drawer-inner">
+    <div class="drawer-section-lbl">Navegación</div>
+""", unsafe_allow_html=True)
 
-    st.markdown("<hr class='sdiv'>", unsafe_allow_html=True)
-    st.markdown(f"<div style='font-size:.68rem;color:#3b5270;padding:.5rem 0;'>Hoy: {date.today().strftime('%d/%m/%Y')}</div>", unsafe_allow_html=True)
+for icon, label, key in nav_items:
+    is_active = st.session_state["page"] == key
+    active_cls = "active" if is_active else ""
+    if st.button(
+        f"{icon}  {label}",
+        key=f"nav_{key}",
+        use_container_width=True,
+        help=label,
+    ):
+        st.session_state["page"] = key
+        st.session_state["menu_open"] = False
+        st.rerun()
+
+st.markdown("""
+    <hr class="drawer-divider">
+    <div class="drawer-section-lbl">Configuración</div>
+""", unsafe_allow_html=True)
+
+# Tienda selector inside drawer
+sel_label = st.selectbox("Tienda", list(t_opts.keys()), index=2, key="sel_tienda_drw")
+sel_tienda = t_opts[sel_label]
+
+auds = auds_all[auds_all["tienda_id"] == sel_tienda]
+if len(auds):
+    a_opts = {f"{r['fecha']}  ·  {r['auditor']}": r['id'] for _, r in auds.iterrows()}
+    sel_aud_label = st.selectbox("Auditoría", list(a_opts.keys()), key="sel_aud_drw")
+    sel_aud_id = a_opts[sel_aud_label]
+else:
+    st.markdown("<div style='font-size:.78rem;color:#3b5270;padding:.5rem .6rem;'>Sin auditorías registradas</div>", unsafe_allow_html=True)
+    sel_aud_id = None
+
+st.markdown(f"""
+  </div>
+  <div class="drawer-footer">Hoy · {today_str}</div>
+</div>
+""", unsafe_allow_html=True)
+
+# ── Hamburger toggle button (Streamlit) ──────────────────────────────────────
+# JS handles visual toggle; Streamlit button syncs state on next rerun
+st.markdown("""
+<script>
+function toggleMenu() {
+    var drawer  = document.getElementById('navDrawer');
+    var overlay = document.getElementById('drawerOverlay');
+    var btn     = document.getElementById('hamBtn');
+    var isOpen  = drawer.classList.contains('open');
+    if (isOpen) {
+        drawer.classList.remove('open');
+        overlay.classList.remove('open');
+        btn.classList.remove('open');
+    } else {
+        drawer.classList.add('open');
+        overlay.classList.add('open');
+        btn.classList.add('open');
+    }
+}
+function closeMenu() {
+    document.getElementById('navDrawer').classList.remove('open');
+    document.getElementById('drawerOverlay').classList.remove('open');
+    document.getElementById('hamBtn').classList.remove('open');
+}
+</script>
+""", unsafe_allow_html=True)
 
 # ═══════════════════════════════════════════════════════════
 # PAGE: DASHBOARD
