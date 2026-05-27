@@ -932,35 +932,100 @@ elif page == "⚠️  Hallazgos":
                 st.session_state["show_hall"] = False
                 st.rerun()
 
-    if len(hall)==0:
+    # ── Edit / Delete state
+    editing_id  = st.session_state.get("edit_hall_id")
+    confirm_del = st.session_state.get("confirm_del_id")
+
+    if len(hall) == 0:
         st.markdown("<div class='success-banner'>✅ No hay hallazgos registrados para esta auditoría.</div>", unsafe_allow_html=True)
     else:
         for _, h in hall.iterrows():
-            ok = h["estado"]=="Resuelto"
-            bc = "#10b981" if ok else "#ef4444"; bg = "#f0fdf4" if ok else "#fff8f8"
-            hcol1, hcol2 = st.columns([4,1])
-            with hcol1:
+            hid = int(h["id"])
+            ok  = h["estado"] == "Resuelto"
+            bc  = "#10b981" if ok else "#ef4444"
+            bg  = "#f0fdf4" if ok else "#fff8f8"
+            bdr = "#bbf7d0" if ok else "#fecdd3"
+
+            # ── EDIT MODE for this row
+            if editing_id == hid:
+                with st.form(f"edit_form_{hid}"):
+                    st.markdown(f"<div style='font-size:.75rem;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.06em;margin-bottom:.75rem;'>✏️ Editando hallazgo #{hid}</div>", unsafe_allow_html=True)
+                    ec1, ec2 = st.columns(2)
+                    e_proc = ec1.text_input("Proceso Afectado", value=h["proceso_afectado"])
+                    e_est  = ec2.selectbox("Estado", ["Pendiente","Resuelto"],
+                                           index=0 if h["estado"]=="Pendiente" else 1)
+                    e_hall = st.text_area("Descripción", value=h["hallazgo"])
+                    e_obs  = st.text_input("Observaciones", value=h["observaciones"] if pd.notna(h.get("observaciones")) and h["observaciones"] else "")
+                    sc1, sc2 = st.columns(2)
+                    if sc1.form_submit_button("💾 Guardar cambios", type="primary", use_container_width=True):
+                        c = get_connection()
+                        c.execute("""UPDATE hallazgos SET proceso_afectado=?, hallazgo=?,
+                                     observaciones=?, estado=? WHERE id=?""",
+                                  (e_proc, e_hall, e_obs or None, e_est, hid))
+                        c.commit(); c.close()
+                        st.session_state.pop("edit_hall_id", None)
+                        st.rerun()
+                    if sc2.form_submit_button("✕ Cancelar", use_container_width=True):
+                        st.session_state.pop("edit_hall_id", None)
+                        st.rerun()
+                continue  # skip normal card render while editing
+
+            # ── NORMAL CARD + ACTION BUTTONS
+            card_col, btn_col = st.columns([5, 1])
+
+            with card_col:
+                obs_html = f'<div style="color:#94a3b8;font-size:.76rem;margin-top:.2rem;font-style:italic;">{h["observaciones"]}</div>' \
+                           if pd.notna(h.get("observaciones")) and h["observaciones"] else ""
                 st.markdown(f"""
-                <div style='background:{bg};border:1px solid {"#bbf7d0" if ok else "#fecdd3"};border-left:4px solid {bc};
-                     border-radius:10px;padding:1rem 1.25rem;margin-bottom:.5rem;'>
+                <div style='background:{bg};border:1px solid {bdr};border-left:4px solid {bc};
+                     border-radius:10px;padding:1rem 1.25rem;margin-bottom:.25rem;'>
                   <div style='display:flex;justify-content:space-between;align-items:center;'>
-                    <span style='font-weight:700;font-size:.88rem;color:#0f172a;'>#{h["id"]} · {h["proceso_afectado"]}</span>
+                    <span style='font-weight:700;font-size:.88rem;color:#0f172a;'>#{hid} · {h["proceso_afectado"]}</span>
                     <span class='badge {"b-ok" if ok else "b-fail"}'>{h["estado"]}</span>
                   </div>
                   <div style='color:#475569;font-size:.81rem;margin-top:.35rem;'>{h["hallazgo"]}</div>
-                  {f'<div style="color:#94a3b8;font-size:.76rem;margin-top:.2rem;font-style:italic;">{h["observaciones"]}</div>' if pd.notna(h.get("observaciones")) and h["observaciones"] else ""}
+                  {obs_html}
                 </div>""", unsafe_allow_html=True)
-            with hcol2:
+
+            with btn_col:
+                # Resolve / Reopen
                 if not ok:
-                    if st.button("✅ Resolver", key=f"res_{h['id']}", use_container_width=True):
+                    if st.button("✅ Resolver", key=f"res_{hid}", use_container_width=True):
                         c = get_connection()
-                        c.execute("UPDATE hallazgos SET estado='Resuelto' WHERE id=?", (h["id"],))
+                        c.execute("UPDATE hallazgos SET estado='Resuelto' WHERE id=?", (hid,))
                         c.commit(); c.close(); st.rerun()
                 else:
-                    if st.button("↩️ Reabrir", key=f"reopen_{h['id']}", use_container_width=True):
+                    if st.button("↩️ Reabrir", key=f"reopen_{hid}", use_container_width=True):
                         c = get_connection()
-                        c.execute("UPDATE hallazgos SET estado='Pendiente' WHERE id=?", (h["id"],))
+                        c.execute("UPDATE hallazgos SET estado='Pendiente' WHERE id=?", (hid,))
                         c.commit(); c.close(); st.rerun()
+
+                # Edit
+                if st.button("✏️ Editar", key=f"edit_{hid}", use_container_width=True):
+                    st.session_state["edit_hall_id"] = hid
+                    st.session_state.pop("confirm_del_id", None)
+                    st.rerun()
+
+                # Delete — two-step confirm
+                if confirm_del == hid:
+                    st.markdown("<div style='font-size:.72rem;color:#b91c1c;font-weight:600;text-align:center;margin-top:2px;'>¿Confirmar?</div>", unsafe_allow_html=True)
+                    cd1, cd2 = st.columns(2)
+                    if cd1.button("Sí", key=f"del_yes_{hid}", use_container_width=True):
+                        c = get_connection()
+                        c.execute("DELETE FROM hallazgos WHERE id=?", (hid,))
+                        c.commit(); c.close()
+                        st.session_state.pop("confirm_del_id", None)
+                        st.rerun()
+                    if cd2.button("No", key=f"del_no_{hid}", use_container_width=True):
+                        st.session_state.pop("confirm_del_id", None)
+                        st.rerun()
+                else:
+                    if st.button("🗑️ Borrar", key=f"del_{hid}", use_container_width=True):
+                        st.session_state["confirm_del_id"] = hid
+                        st.session_state.pop("edit_hall_id", None)
+                        st.rerun()
+
+            st.markdown("<div style='margin-bottom:.5rem;'></div>", unsafe_allow_html=True)
 
 
 # ═══════════════════════════════════════════════════════════
