@@ -161,40 +161,91 @@ def render(sel_aud_id: int, sel_label: str) -> None:
     # ── Secciones + Tienda ────────────────────────────────────────────────────
     cl, cr = st.columns([1.3, 1])
 
+    import plotly.graph_objects as go
+
     with cl:
-        st.markdown("**📋 Cumplimiento por Sección**")
         secs = get_secciones_farma()
+        nombres, valores, colores, textos = [], [], [], []
         for _, s in secs.iterrows():
             si = items_f[items_f["seccion_id"] == s["id"]]
             if not len(si): continue
             cum = int(si["puntaje"].sum()); tot = len(si); p = cum / tot
-            if p >= 0.95:   tc, lbl, icon = "normal",  "Muy favorable ✅", "🟢"
-            elif p >= 0.85: tc, lbl, icon = "normal",  "Aceptable ⚠️",     "🟡"
-            else:           tc, lbl, icon = "normal",  "Desfavorable ❌",   "🔴"
+            nombres.append(s["nombre"][:35] + "…" if len(s["nombre"]) > 35 else s["nombre"])
+            valores.append(round(p * 100, 1))
+            colores.append("#10b981" if p >= 0.95 else ("#f59e0b" if p >= 0.85 else "#ef4444"))
+            textos.append(f"{cum}/{tot} · {p:.0%}")
 
-            with st.container():
-                ca, cb = st.columns([4, 1])
-                ca.markdown(f"{icon} **{s['nombre']}**  \n{lbl}")
-                cb.markdown(f"### {p:.0%}")
-                cb.caption(f"{cum}/{tot}")
-                st.progress(p)
-                st.markdown("---")
+        fig_f = go.Figure(go.Bar(
+            x=valores, y=nombres, orientation="h",
+            marker_color=colores,
+            text=textos, textposition="inside",
+            textfont=dict(color="white", size=11, family="Inter"),
+            hovertemplate="<b>%{y}</b><br>%{text}<extra></extra>",
+        ))
+        fig_f.update_layout(
+            title=dict(text="📋 Cumplimiento por Sección", font=dict(size=13, color="#64748b"), x=0),
+            xaxis=dict(range=[0, 105], showgrid=True, gridcolor="#f1f5f9",
+                       ticksuffix="%", tickfont=dict(size=10), zeroline=False),
+            yaxis=dict(tickfont=dict(size=11, color="#334155"), automargin=True),
+            plot_bgcolor="white", paper_bgcolor="white",
+            margin=dict(l=10, r=20, t=40, b=10),
+            height=max(200, len(nombres) * 52),
+            showlegend=False,
+            shapes=[
+                dict(type="line", x0=95, x1=95, y0=-0.5, y1=len(nombres)-0.5,
+                     line=dict(color="#10b981", width=1.5, dash="dot")),
+                dict(type="line", x0=85, x1=85, y0=-0.5, y1=len(nombres)-0.5,
+                     line=dict(color="#f59e0b", width=1.5, dash="dot")),
+            ],
+            annotations=[
+                dict(x=95, y=len(nombres)-0.3, text="95%", showarrow=False,
+                     font=dict(size=9, color="#10b981"), xanchor="center"),
+                dict(x=85, y=len(nombres)-0.3, text="85%", showarrow=False,
+                     font=dict(size=9, color="#f59e0b"), xanchor="center"),
+            ],
+        )
+        st.plotly_chart(fig_f, use_container_width=True, config={"displayModeBar": False})
 
     with cr:
-        st.markdown("**🏪 Criterios de Tienda**")
+        criterios, califs, colores_t, textos_t = [], [], [], []
         for _, row in items_t.iterrows():
             cal = row["calificacion"]
-            if cal >= row["superior"]:   lbl, icon = "Superior ✅",    "🟢"
-            elif cal >= row["minimo"]:   lbl, icon = "Aceptable ⚠️",   "🟡"
-            else:                        lbl, icon = "Bajo mínimo ❌",  "🔴"
+            criterios.append(row["criterio"][:28] + "…" if len(row["criterio"]) > 28 else row["criterio"])
+            califs.append(float(cal))
+            colores_t.append("#10b981" if cal >= row["superior"] else ("#f59e0b" if cal >= row["minimo"] else "#ef4444"))
+            lbl = "Superior" if cal >= row["superior"] else ("Aceptable" if cal >= row["minimo"] else "Bajo mín.")
+            textos_t.append(f"{cal} · {lbl}")
 
-            with st.container():
-                ca, cb = st.columns([4, 1])
-                ca.markdown(f"{icon} **{row['criterio']}**  \n{lbl}")
-                cb.markdown(f"### {cal}")
-                ca.caption(f"Mín {row['minimo']} · Meta {row['meta']} · Sup {row['superior']}")
-                st.progress(cal / 10)
-                st.markdown("---")
+        fig_t = go.Figure(go.Bar(
+            x=califs, y=criterios, orientation="h",
+            marker_color=colores_t,
+            text=textos_t, textposition="inside",
+            textfont=dict(color="white", size=10, family="Inter"),
+            hovertemplate="<b>%{y}</b><br>%{text}<extra></extra>",
+        ))
+        fig_t.update_layout(
+            title=dict(text="🏪 Criterios de Tienda", font=dict(size=13, color="#64748b"), x=0),
+            xaxis=dict(range=[0, 10.5], showgrid=True, gridcolor="#f1f5f9",
+                       tickfont=dict(size=10), zeroline=False),
+            yaxis=dict(tickfont=dict(size=10, color="#334155"), automargin=True),
+            plot_bgcolor="white", paper_bgcolor="white",
+            margin=dict(l=10, r=20, t=40, b=10),
+            height=max(200, len(criterios) * 48),
+            showlegend=False,
+            shapes=[
+                dict(type="line", x0=9.5, x1=9.5, y0=-0.5, y1=len(criterios)-0.5,
+                     line=dict(color="#10b981", width=1.5, dash="dot")),
+                dict(type="line", x0=9.0, x1=9.0, y0=-0.5, y1=len(criterios)-0.5,
+                     line=dict(color="#f59e0b", width=1.5, dash="dot")),
+            ],
+            annotations=[
+                dict(x=9.5, y=len(criterios)-0.3, text="Sup 9.5", showarrow=False,
+                     font=dict(size=9, color="#10b981"), xanchor="center"),
+                dict(x=9.0, y=len(criterios)-0.3, text="Mín 9.0", showarrow=False,
+                     font=dict(size=9, color="#f59e0b"), xanchor="center"),
+            ],
+        )
+        st.plotly_chart(fig_t, use_container_width=True, config={"displayModeBar": False})
 
     # ── Hallazgos ─────────────────────────────────────────────────────────────
     if len(hall):
