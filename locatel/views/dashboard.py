@@ -63,87 +63,34 @@ def render(sel_aud_id: int, sel_label: str) -> None:
     pt     = avg_t / 10 if len(items_t) else 0
     h_pend = len(hall[hall["estado"] == "Pendiente"]) if len(hall) else 0
 
-    # CSS para estilizar st.metric como tarjetas modernas
-    st.markdown("""
-    <style>
-    [data-testid="stMetric"] {
-        background: white;
-        border: 1px solid #e8eef5;
-        border-radius: 16px;
-        padding: 1.1rem 1.25rem 1rem;
-        box-shadow: 0 2px 12px rgba(0,0,0,.05);
-        position: relative;
-        overflow: hidden;
-    }
-    [data-testid="stMetric"]::before {
-        content: '';
-        position: absolute;
-        top: 0; left: 0; right: 0;
-        height: 3px;
-        background: linear-gradient(90deg, #1a56db, #60a5fa);
-        border-radius: 16px 16px 0 0;
-    }
-    [data-testid="stMetricLabel"] {
-        font-size: .62rem !important;
-        font-weight: 700 !important;
-        color: #94a3b8 !important;
-        text-transform: uppercase !important;
-        letter-spacing: .07em !important;
-    }
-    [data-testid="stMetricValue"] {
-        font-size: 1.6rem !important;
-        font-weight: 800 !important;
-        color: #0f172a !important;
-        letter-spacing: -.02em !important;
-        line-height: 1.1 !important;
-    }
-    [data-testid="stMetricDelta"] {
-        font-size: .72rem !important;
-        font-weight: 500 !important;
-    }
-    </style>
-    """, unsafe_allow_html=True)
+    def kpi(col, label, value, sub, color):
+        vc = {"blue":"#1a56db","green":"#059669","red":"#dc2626","amber":"#b45309","purple":"#7c3aed"}.get(color,"#1a56db")
+        col.markdown(
+            "<div style='background:white;border-radius:14px;padding:1rem 1.1rem;"
+            "border:1px solid #e8eef5;box-shadow:0 2px 8px rgba(0,0,0,.05);"
+            "border-top:3px solid " + vc + ";'>"
+            "<p style='margin:0 0 4px;font-size:.62rem;font-weight:700;"
+            "color:#94a3b8;text-transform:uppercase;letter-spacing:.07em;'>" + label + "</p>"
+            "<p style='margin:0 0 3px;font-size:1.55rem;font-weight:800;"
+            "color:" + vc + ";line-height:1.1;'>" + value + "</p>"
+            "<p style='margin:0;font-size:.72rem;color:#94a3b8;'>" + sub + "</p>"
+            "</div>",
+            unsafe_allow_html=True
+        )
 
-    k1, k2, k3, k4, k5 = st.columns(5)
+    fc = "#059669" if pf>=0.95 else ("#b45309" if pf>=0.85 else "#dc2626")
+    fl = "Muy favorable" if pf>=0.95 else ("Aceptable" if pf>=0.85 else "Desfavorable")
+    tc2 = "#059669" if pt>=0.95 else ("#b45309" if pt>=0.85 else "#dc2626")
+    tl = "Muy favorable" if pt>=0.95 else ("Aceptable" if pt>=0.85 else "Bajo meta")
+    rc = "#059669" if resultado=="FAVORABLE" else ("#b45309" if resultado=="CONDICIONADO" else "#dc2626")
 
-    # Calificación global
-    k1.metric(
-        label="📊 Calificación Global",
-        value=f"{calif:.0%}",
-        delta="Score consolidado",
-    )
-
-    # Cumplimiento farma
-    delta_f = "✅ Favorable" if pf >= 0.95 else ("⚠️ Aceptable" if pf >= 0.85 else "❌ Desfavorable")
-    k2.metric(
-        label="💊 Cumplimiento Farma",
-        value=f"{pf:.0%}",
-        delta=f"{cf}/{tf} ítems · {delta_f}",
-    )
-
-    # Promedio tienda
-    delta_t = "✅ Favorable" if pt >= 0.95 else ("⚠️ Aceptable" if pt >= 0.85 else "❌ Bajo meta")
-    k3.metric(
-        label="🏪 Promedio Tienda",
-        value=f"{avg_t:.1f}",
-        delta=f"Meta 9.5 · {delta_t}",
-    )
-
-    # Hallazgos
-    k4.metric(
-        label="⚠️ Hallazgos Pendientes",
-        value=str(h_pend),
-        delta="sin resolver" if h_pend else "Todo resuelto ✅",
-        delta_color="inverse" if h_pend else "normal",
-    )
-
-    # Estado
-    estado_icon = "✅" if resultado == "FAVORABLE" else ("⚠️" if resultado == "CONDICIONADO" else "❌")
-    k5.metric(
-        label="🏁 Estado Auditoría",
-        value=resultado,
-        delta=f"{estado_icon} {audit_date}",
-    )
+    k1,k2,k3,k4,k5 = st.columns(5)
+    cc = "#059669" if calif>=0.95 else ("#b45309" if calif>=0.85 else "#dc2626")
+    kpi(k1, "Calificación Global", f"{calif:.0%}", "Score consolidado", "blue")
+    kpi(k2, "Cumplimiento Farma",  f"{pf:.0%}",   f"{cf}/{tf} ítems · {fl}", "green")
+    kpi(k3, "Promedio Tienda",     f"{avg_t:.1f}", f"Meta 9.5 · {tl}", "purple")
+    kpi(k4, "Hallazgos Pendientes",str(h_pend),    "sin resolver" if h_pend else "Todo resuelto", "red" if h_pend else "green")
+    kpi(k5, "Estado",              resultado,       audit_date, "green" if resultado=="FAVORABLE" else ("amber" if resultado=="CONDICIONADO" else "red"))
 
     st.markdown("<br>", unsafe_allow_html=True)
 
