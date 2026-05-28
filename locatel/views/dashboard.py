@@ -94,14 +94,90 @@ def render(sel_aud_id: int, sel_label: str) -> None:
 
     st.markdown("<br>", unsafe_allow_html=True)
 
-    # ── Gauges ────────────────────────────────────────────────────────────────
+    # ── Gauges Plotly ─────────────────────────────────────────────────────────
+    import plotly.graph_objects as go
+
+    def make_gauge(value, title, label, color):
+        pct = round(value * 100, 1)
+        fig = go.Figure(go.Indicator(
+            mode="gauge+number",
+            value=pct,
+            number={"suffix": "%", "font": {"size": 36, "color": color, "family": "Inter"}},
+            title={"text": f"<b>{title}</b><br><span style='font-size:.75em;color:#94a3b8'>{label}</span>",
+                   "font": {"size": 13, "family": "Inter"}},
+            gauge={
+                "axis": {"range": [0, 100], "tickwidth": 1, "tickcolor": "#e2e8f0",
+                         "tickfont": {"size": 9, "color": "#94a3b8"}, "dtick": 25},
+                "bar": {"color": color, "thickness": 0.7},
+                "bgcolor": "white",
+                "borderwidth": 0,
+                "steps": [
+                    {"range": [0, 85],  "color": "#fef2f2"},
+                    {"range": [85, 95], "color": "#fefce8"},
+                    {"range": [95, 100],"color": "#f0fdf4"},
+                ],
+                "threshold": {
+                    "line": {"color": "#1a56db", "width": 2},
+                    "thickness": 0.8,
+                    "value": 95,
+                },
+            },
+        ))
+        fig.update_layout(
+            height=240,
+            margin=dict(l=20, r=20, t=60, b=10),
+            paper_bgcolor="white",
+            font={"family": "Inter"},
+        )
+        return fig
+
+    def make_gauge_score(value, title, label, color):
+        fig = go.Figure(go.Indicator(
+            mode="gauge+number",
+            value=value,
+            number={"font": {"size": 36, "color": color, "family": "Inter"}},
+            title={"text": f"<b>{title}</b><br><span style='font-size:.75em;color:#94a3b8'>{label}</span>",
+                   "font": {"size": 13, "family": "Inter"}},
+            gauge={
+                "axis": {"range": [0, 10], "tickwidth": 1, "tickcolor": "#e2e8f0",
+                         "tickfont": {"size": 9, "color": "#94a3b8"}, "dtick": 2},
+                "bar": {"color": color, "thickness": 0.7},
+                "bgcolor": "white",
+                "borderwidth": 0,
+                "steps": [
+                    {"range": [0, 9.0],  "color": "#fef2f2"},
+                    {"range": [9.0, 9.5],"color": "#fefce8"},
+                    {"range": [9.5, 10], "color": "#f0fdf4"},
+                ],
+                "threshold": {
+                    "line": {"color": "#1a56db", "width": 2},
+                    "thickness": 0.8,
+                    "value": 9.5,
+                },
+            },
+        ))
+        fig.update_layout(
+            height=240,
+            margin=dict(l=20, r=20, t=60, b=10),
+            paper_bgcolor="white",
+            font={"family": "Inter"},
+        )
+        return fig
+
+    col_pf = "#10b981" if pf >= 0.95 else ("#f59e0b" if pf >= 0.85 else "#ef4444")
+    col_pt = "#10b981" if pt >= 0.95 else ("#f59e0b" if pt >= 0.85 else "#ef4444")
+    col_g  = "#10b981" if calif >= 0.95 else ("#f59e0b" if calif >= 0.85 else "#ef4444")
+
     g1, g2, g3 = st.columns(3)
     with g1:
-        st.markdown(gauge_html(pf,    "Farmacia", f"{cf}/{tf} ítems",        pct_color(pf)),    unsafe_allow_html=True)
+        st.plotly_chart(make_gauge(pf, "Farmacia", f"{cf}/{tf} ítems", col_pf),
+                        use_container_width=True, config={"displayModeBar": False})
     with g2:
-        st.markdown(gauge_html(pt,    "Tienda",   f"Prom. {avg_t:.1f} / 10", pct_color(pt)),    unsafe_allow_html=True)
+        st.plotly_chart(make_gauge_score(avg_t, "Tienda", f"Prom. {avg_t:.1f} / 10", col_pt),
+                        use_container_width=True, config={"displayModeBar": False})
     with g3:
-        st.markdown(gauge_html(calif, "Global",   resultado,                  pct_color(calif)), unsafe_allow_html=True)
+        st.plotly_chart(make_gauge(calif, "Global", resultado, col_g),
+                        use_container_width=True, config={"displayModeBar": False})
 
     st.markdown("<br>", unsafe_allow_html=True)
 
