@@ -90,78 +90,39 @@ def render(sel_aud_id: int, sel_label: str) -> None:
     cl, cr = st.columns([1.3, 1])
 
     with cl:
-        st.markdown("""<div style="background:white;border-radius:16px;border:1px solid #e8eef5;
-            box-shadow:0 2px 12px rgba(0,0,0,.04);padding:1.5rem;margin-bottom:1rem;">
-            <div style="font-size:.7rem;font-weight:700;color:#64748b;text-transform:uppercase;
-                letter-spacing:.08em;margin-bottom:1rem;padding-bottom:.75rem;
-                border-bottom:1px solid #f1f5f9;">📋 Cumplimiento por Sección</div>""",
-            unsafe_allow_html=True)
-
+        st.markdown("**📋 Cumplimiento por Sección**")
         secs = get_secciones_farma()
         for _, s in secs.iterrows():
             si = items_f[items_f["seccion_id"] == s["id"]]
             if not len(si): continue
             cum = int(si["puntaje"].sum()); tot = len(si); p = cum / tot
-            if p >= 0.95:
-                bc, tc, bg, dc, lbl = "#10b981","#059669","#f0fdf4","#d1fae5","Muy favorable"
-            elif p >= 0.85:
-                bc, tc, bg, dc, lbl = "#f59e0b","#b45309","#fffbeb","#fde68a","Aceptable"
-            else:
-                bc, tc, bg, dc, lbl = "#ef4444","#dc2626","#fff5f5","#fecaca","Desfavorable"
-            nombre = s["nombre"]
-            pw = f"{p*100:.0f}"
-            pf = f"{p:.0%}"
-            st.markdown(
-                f"<div style=\"background:{bg};border:1px solid {dc};border-radius:12px;"
-                f"padding:.85rem 1rem;margin-bottom:.6rem;\">"
-                f"<div style=\"display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:.5rem;\">"
-                f"<div style=\"font-size:.8rem;font-weight:600;color:#334155;line-height:1.3;flex:1;padding-right:.5rem;\">{nombre}</div>"
-                f"<div style=\"text-align:right;flex-shrink:0;\">"
-                f"<div style=\"font-size:1.1rem;font-weight:800;color:{tc};line-height:1;\">{pf}</div>"
-                f"<div style=\"font-size:.65rem;color:{tc};opacity:.7;margin-top:1px;\">{cum}/{tot} ítems</div>"
-                f"</div></div>"
-                f"<div style=\"background:white;border-radius:100px;height:6px;overflow:hidden;opacity:.7;\">"
-                f"<div style=\"width:{pw}%;height:100%;background:{bc};border-radius:100px;\"></div></div>"
-                f"<div style=\"font-size:.65rem;color:{tc};margin-top:.35rem;font-weight:600;opacity:.8;\">{lbl}</div>"
-                f"</div>",
-                unsafe_allow_html=True)
+            if p >= 0.95:   tc, lbl, icon = "normal",  "Muy favorable ✅", "🟢"
+            elif p >= 0.85: tc, lbl, icon = "normal",  "Aceptable ⚠️",     "🟡"
+            else:           tc, lbl, icon = "normal",  "Desfavorable ❌",   "🔴"
 
-        st.markdown("</div>", unsafe_allow_html=True)
+            with st.container():
+                ca, cb = st.columns([4, 1])
+                ca.markdown(f"{icon} **{s['nombre']}**  \n{lbl}")
+                cb.markdown(f"### {p:.0%}")
+                cb.caption(f"{cum}/{tot}")
+                st.progress(p)
+                st.markdown("---")
 
     with cr:
-        st.markdown("""<div style="background:white;border-radius:16px;border:1px solid #e8eef5;
-            box-shadow:0 2px 12px rgba(0,0,0,.04);padding:1.5rem;margin-bottom:1rem;">
-            <div style="font-size:.7rem;font-weight:700;color:#64748b;text-transform:uppercase;
-                letter-spacing:.08em;margin-bottom:1rem;padding-bottom:.75rem;
-                border-bottom:1px solid #f1f5f9;">🏪 Criterios de Tienda</div>""",
-            unsafe_allow_html=True)
-
+        st.markdown("**🏪 Criterios de Tienda**")
         for _, row in items_t.iterrows():
             cal = row["calificacion"]
-            if cal >= row["superior"]:
-                bc, tc, bg, dc, lbl, icon = "#10b981","#059669","#f0fdf4","#d1fae5","Superior","✅"
-            elif cal >= row["minimo"]:
-                bc, tc, bg, dc, lbl, icon = "#f59e0b","#b45309","#fffbeb","#fde68a","Aceptable","⚠️"
-            else:
-                bc, tc, bg, dc, lbl, icon = "#ef4444","#dc2626","#fff5f5","#fecaca","Bajo mínimo","❌"
-            pw = f"{cal/10*100:.0f}"
-            criterio = row["criterio"]
-            mn, mt, sp = row["minimo"], row["meta"], row["superior"]
-            st.markdown(
-                f"<div style=\"background:{bg};border:1px solid {dc};border-radius:12px;"
-                f"padding:.85rem 1rem;margin-bottom:.6rem;\">"
-                f"<div style=\"display:flex;justify-content:space-between;align-items:center;margin-bottom:.45rem;\">"
-                f"<div style=\"font-size:.78rem;font-weight:600;color:#334155;flex:1;padding-right:.5rem;line-height:1.3;\">"
-                f"{icon} {criterio}</div>"
-                f"<div style=\"font-size:1.15rem;font-weight:800;color:{tc};flex-shrink:0;\">{cal}</div></div>"
-                f"<div style=\"background:white;border-radius:100px;height:6px;overflow:hidden;opacity:.7;\">"
-                f"<div style=\"width:{pw}%;height:100%;background:{bc};border-radius:100px;\"></div></div>"
-                f"<div style=\"display:flex;justify-content:space-between;margin-top:.35rem;font-size:.63rem;color:{tc};opacity:.75;\">"
-                f"<span>{lbl}</span><span>Mín {mn} · Meta {mt} · Sup {sp}</span></div>"
-                f"</div>",
-                unsafe_allow_html=True)
+            if cal >= row["superior"]:   lbl, icon = "Superior ✅",    "🟢"
+            elif cal >= row["minimo"]:   lbl, icon = "Aceptable ⚠️",   "🟡"
+            else:                        lbl, icon = "Bajo mínimo ❌",  "🔴"
 
-        st.markdown("</div>", unsafe_allow_html=True)
+            with st.container():
+                ca, cb = st.columns([4, 1])
+                ca.markdown(f"{icon} **{row['criterio']}**  \n{lbl}")
+                cb.markdown(f"### {cal}")
+                ca.caption(f"Mín {row['minimo']} · Meta {row['meta']} · Sup {row['superior']}")
+                st.progress(cal / 10)
+                st.markdown("---")
 
     # ── Hallazgos ─────────────────────────────────────────────────────────────
     if len(hall):
