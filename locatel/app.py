@@ -54,20 +54,6 @@ with st.sidebar:
     </div>
     <hr style='border:none;border-top:1px solid #1a2744;margin:.5rem 0;'>
     <div style='font-size:.6rem;font-weight:700;color:#2d4a6b;text-transform:uppercase;
-                letter-spacing:.1em;padding:.2rem .25rem .4rem;'>Navegación</div>
-    """, unsafe_allow_html=True)
-
-    for icon, label, key in NAV_ITEMS:
-        is_active = st.session_state["page"] == key
-        st.markdown(f"<div class='{'nav-active' if is_active else ''}'>", unsafe_allow_html=True)
-        if st.button(f"{icon}  {label}", key=f"nav_{key}", use_container_width=True):
-            st.session_state["page"] = key
-            st.rerun()
-        st.markdown("</div>", unsafe_allow_html=True)
-
-    st.markdown("""
-    <hr style='border:none;border-top:1px solid #1a2744;margin:.75rem 0 .5rem;'>
-    <div style='font-size:.6rem;font-weight:700;color:#2d4a6b;text-transform:uppercase;
                 letter-spacing:.1em;padding:.2rem .25rem .4rem;'>Configuración</div>
     """, unsafe_allow_html=True)
 
@@ -85,6 +71,20 @@ with st.sidebar:
         st.markdown("<div style='font-size:.78rem;color:#3b5270;padding:.5rem 0;'>Sin auditorías</div>",
                     unsafe_allow_html=True)
         sel_aud_id = None
+
+    st.markdown("""
+    <hr style='border:none;border-top:1px solid #1a2744;margin:.75rem 0 .5rem;'>
+    <div style='font-size:.6rem;font-weight:700;color:#2d4a6b;text-transform:uppercase;
+                letter-spacing:.1em;padding:.2rem .25rem .4rem;'>Navegación</div>
+    """, unsafe_allow_html=True)
+
+    for icon, label, key in NAV_ITEMS:
+        is_active = st.session_state["page"] == key
+        st.markdown(f"<div class='{'nav-active' if is_active else ''}'>", unsafe_allow_html=True)
+        if st.button(f"{icon}  {label}", key=f"nav_{key}", use_container_width=True):
+            st.session_state["page"] = key
+            st.rerun()
+        st.markdown("</div>", unsafe_allow_html=True)
 
     st.markdown(
         f"<hr style='border:none;border-top:1px solid #1a2744;margin:.75rem 0;'>"
