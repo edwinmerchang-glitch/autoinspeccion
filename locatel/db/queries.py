@@ -222,3 +222,36 @@ def update_botiquin_fecha(item_id: int, fecha: str) -> None:
 def get_secciones_farma() -> pd.DataFrame:
     with get_db() as conn:
         return pd.read_sql("SELECT * FROM secciones_farma", conn)
+
+
+# ── Consolidado multi-tienda ───────────────────────────────────────────────────
+
+def get_consolidado(tienda_id: str | None = None) -> pd.DataFrame:
+    """
+    Retorna todas las auditorías con métricas calculadas.
+    Si tienda_id se especifica, filtra por esa tienda.
+    """
+    sql = """
+        SELECT
+            a.id,
+            a.tienda_id,
+            t.nombre   AS tienda_nombre,
+            a.fecha,
+            a.auditor,
+            a.calificacion_global,
+            a.resultado,
+            (SELECT COUNT(*) FROM items_farma f WHERE f.auditoria_id = a.id)              AS total_farma,
+            (SELECT COALESCE(SUM(f.puntaje),0) FROM items_farma f WHERE f.auditoria_id = a.id) AS cumple_farma,
+            (SELECT COALESCE(AVG(it.calificacion),0) FROM items_tienda it WHERE it.auditoria_id = a.id) AS avg_tienda,
+            (SELECT COUNT(*) FROM hallazgos h WHERE h.auditoria_id = a.id AND h.estado='Pendiente') AS hall_pend
+        FROM auditorias a
+        JOIN tiendas t ON t.id = a.tienda_id
+    """
+    params = ()
+    if tienda_id:
+        sql += " WHERE a.tienda_id = ?"
+        params = (tienda_id,)
+    sql += " ORDER BY a.fecha DESC"
+
+    with get_db() as conn:
+        return pd.read_sql(sql, conn, params=params if params else None)
