@@ -188,86 +188,106 @@ def render(sel_aud_id: int, sel_label: str) -> None:
 
     with cl:
         secs = get_secciones_farma()
-        nombres, valores, colores, textos = [], [], [], []
+        nombres, valores, colores, textos, hovers = [], [], [], [], []
         for _, s in secs.iterrows():
             si = items_f[items_f["seccion_id"] == s["id"]]
             if not len(si): continue
             cum = int(si["puntaje"].sum()); tot = len(si); p = cum / tot
-            nombres.append(s["nombre"][:35] + "…" if len(s["nombre"]) > 35 else s["nombre"])
+            n = s["nombre"][:32] + "…" if len(s["nombre"]) > 32 else s["nombre"]
+            nombres.append(n)
             valores.append(round(p * 100, 1))
-            colores.append("#10b981" if p >= 0.95 else ("#f59e0b" if p >= 0.85 else "#ef4444"))
-            textos.append(f"{cum}/{tot} · {p:.0%}")
+            lbl = "Muy favorable" if p>=0.95 else ("Aceptable" if p>=0.85 else "Desfavorable")
+            colores.append("#10b981" if p>=0.95 else ("#f59e0b" if p>=0.85 else "#ef4444"))
+            textos.append(f"  {cum}/{tot} · {p:.0%}")
+            hovers.append(f"<b>{s['nombre']}</b><br>Cumplidos: {cum}/{tot}<br>Porcentaje: {p:.1%}<br>Estado: {lbl}")
 
-        fig_f = go.Figure(go.Bar(
+        fig_f = go.Figure()
+        fig_f.add_trace(go.Bar(
             x=valores, y=nombres, orientation="h",
-            marker_color=colores,
+            marker=dict(color=colores, line=dict(width=0), cornerradius=6),
             text=textos, textposition="inside",
-            textfont=dict(color="white", size=11, family="Inter"),
-            hovertemplate="<b>%{y}</b><br>%{text}<extra></extra>",
+            textfont=dict(color="white", size=11, family="Inter, sans-serif"),
+            hovertemplate="%{customdata}<extra></extra>",
+            customdata=hovers,
         ))
+        fig_f.add_vline(x=85, line=dict(color="#f59e0b", width=1.5, dash="dash"), opacity=0.6)
+        fig_f.add_vline(x=95, line=dict(color="#10b981", width=1.5, dash="dash"), opacity=0.6)
+        fig_f.add_annotation(x=85, y=len(nombres)-0.4, text="85%", showarrow=False,
+                              font=dict(size=9, color="#f59e0b"), bgcolor="white",
+                              bordercolor="#f59e0b", borderwidth=1, borderpad=2)
+        fig_f.add_annotation(x=95, y=len(nombres)-0.4, text="95%", showarrow=False,
+                              font=dict(size=9, color="#10b981"), bgcolor="white",
+                              bordercolor="#10b981", borderwidth=1, borderpad=2)
         fig_f.update_layout(
-            title=dict(text="📋 Cumplimiento por Sección", font=dict(size=13, color="#64748b"), x=0),
-            xaxis=dict(range=[0, 105], showgrid=True, gridcolor="#f1f5f9",
-                       ticksuffix="%", tickfont=dict(size=10), zeroline=False),
-            yaxis=dict(tickfont=dict(size=11, color="#334155"), automargin=True),
+            xaxis=dict(range=[0, 108], showgrid=True, gridcolor="#f1f5f9",
+                       ticksuffix="%", tickfont=dict(size=10, color="#94a3b8"),
+                       zeroline=False, showline=False),
+            yaxis=dict(tickfont=dict(size=10, color="#475569"), automargin=True,
+                       showgrid=False, categoryorder="total ascending"),
             plot_bgcolor="white", paper_bgcolor="white",
-            margin=dict(l=10, r=20, t=40, b=10),
-            height=max(200, len(nombres) * 52),
+            margin=dict(l=0, r=10, t=10, b=10),
+            height=max(180, len(nombres) * 50),
             showlegend=False,
-            shapes=[
-                dict(type="line", x0=95, x1=95, y0=-0.5, y1=len(nombres)-0.5,
-                     line=dict(color="#10b981", width=1.5, dash="dot")),
-                dict(type="line", x0=85, x1=85, y0=-0.5, y1=len(nombres)-0.5,
-                     line=dict(color="#f59e0b", width=1.5, dash="dot")),
-            ],
-            annotations=[
-                dict(x=95, y=len(nombres)-0.3, text="95%", showarrow=False,
-                     font=dict(size=9, color="#10b981"), xanchor="center"),
-                dict(x=85, y=len(nombres)-0.3, text="85%", showarrow=False,
-                     font=dict(size=9, color="#f59e0b"), xanchor="center"),
-            ],
+            hoverlabel=dict(bgcolor="white", font_size=12, font_family="Inter", bordercolor="#e2e8f0"),
         )
+        st.markdown("**📋 Cumplimiento por Sección**")
+        mc1, mc2, mc3 = st.columns(3)
+        mc1.metric("Total ítems", tf)
+        mc2.metric("Cumplidos", cf)
+        mc3.metric("Cumplimiento", f"{pf:.0%}")
         st.plotly_chart(fig_f, use_container_width=True, config={"displayModeBar": False})
 
     with cr:
-        criterios, califs, colores_t, textos_t = [], [], [], []
+        criterios2, califs2, colores2, textos2, hovers2 = [], [], [], [], []
         for _, row in items_t.iterrows():
-            cal = row["calificacion"]
-            criterios.append(row["criterio"][:28] + "…" if len(row["criterio"]) > 28 else row["criterio"])
-            califs.append(float(cal))
-            colores_t.append("#10b981" if cal >= row["superior"] else ("#f59e0b" if cal >= row["minimo"] else "#ef4444"))
-            lbl = "Superior" if cal >= row["superior"] else ("Aceptable" if cal >= row["minimo"] else "Bajo mín.")
-            textos_t.append(f"{cal} · {lbl}")
+            cal = float(row["calificacion"])
+            n = row["criterio"][:28] + "…" if len(row["criterio"]) > 28 else row["criterio"]
+            criterios2.append(n)
+            califs2.append(cal)
+            if cal >= row["superior"]:
+                col2, lbl2 = "#10b981", "Superior"
+            elif cal >= row["minimo"]:
+                col2, lbl2 = "#f59e0b", "Aceptable"
+            else:
+                col2, lbl2 = "#ef4444", "Bajo mínimo"
+            colores2.append(col2)
+            textos2.append(f"  {cal} · {lbl2}")
+            hovers2.append(f"<b>{row['criterio']}</b><br>Calificación: {cal}<br>Mínimo: {row['minimo']} · Superior: {row['superior']}<br>Estado: {lbl2}")
 
-        fig_t = go.Figure(go.Bar(
-            x=califs, y=criterios, orientation="h",
-            marker_color=colores_t,
-            text=textos_t, textposition="inside",
-            textfont=dict(color="white", size=10, family="Inter"),
-            hovertemplate="<b>%{y}</b><br>%{text}<extra></extra>",
+        fig_t = go.Figure()
+        fig_t.add_trace(go.Bar(
+            x=califs2, y=criterios2, orientation="h",
+            marker=dict(color=colores2, line=dict(width=0), cornerradius=6),
+            text=textos2, textposition="inside",
+            textfont=dict(color="white", size=10, family="Inter, sans-serif"),
+            hovertemplate="%{customdata}<extra></extra>",
+            customdata=hovers2,
         ))
+        fig_t.add_vline(x=9.0, line=dict(color="#f59e0b", width=1.5, dash="dash"), opacity=0.6)
+        fig_t.add_vline(x=9.5, line=dict(color="#10b981", width=1.5, dash="dash"), opacity=0.6)
+        fig_t.add_annotation(x=9.0, y=len(criterios2)-0.4, text="Mín 9.0", showarrow=False,
+                              font=dict(size=9, color="#f59e0b"), bgcolor="white",
+                              bordercolor="#f59e0b", borderwidth=1, borderpad=2)
+        fig_t.add_annotation(x=9.5, y=len(criterios2)-0.4, text="Sup 9.5", showarrow=False,
+                              font=dict(size=9, color="#10b981"), bgcolor="white",
+                              bordercolor="#10b981", borderwidth=1, borderpad=2)
         fig_t.update_layout(
-            title=dict(text="🏪 Criterios de Tienda", font=dict(size=13, color="#64748b"), x=0),
-            xaxis=dict(range=[0, 10.5], showgrid=True, gridcolor="#f1f5f9",
-                       tickfont=dict(size=10), zeroline=False),
-            yaxis=dict(tickfont=dict(size=10, color="#334155"), automargin=True),
+            xaxis=dict(range=[0, 11], showgrid=True, gridcolor="#f1f5f9",
+                       tickfont=dict(size=10, color="#94a3b8"), zeroline=False, showline=False),
+            yaxis=dict(tickfont=dict(size=10, color="#475569"), automargin=True,
+                       showgrid=False, categoryorder="total ascending"),
             plot_bgcolor="white", paper_bgcolor="white",
-            margin=dict(l=10, r=20, t=40, b=10),
-            height=max(200, len(criterios) * 48),
+            margin=dict(l=0, r=10, t=10, b=10),
+            height=max(180, len(criterios2) * 46),
             showlegend=False,
-            shapes=[
-                dict(type="line", x0=9.5, x1=9.5, y0=-0.5, y1=len(criterios)-0.5,
-                     line=dict(color="#10b981", width=1.5, dash="dot")),
-                dict(type="line", x0=9.0, x1=9.0, y0=-0.5, y1=len(criterios)-0.5,
-                     line=dict(color="#f59e0b", width=1.5, dash="dot")),
-            ],
-            annotations=[
-                dict(x=9.5, y=len(criterios)-0.3, text="Sup 9.5", showarrow=False,
-                     font=dict(size=9, color="#10b981"), xanchor="center"),
-                dict(x=9.0, y=len(criterios)-0.3, text="Mín 9.0", showarrow=False,
-                     font=dict(size=9, color="#f59e0b"), xanchor="center"),
-            ],
+            hoverlabel=dict(bgcolor="white", font_size=12, font_family="Inter", bordercolor="#e2e8f0"),
         )
+        st.markdown("**🏪 Criterios de Tienda**")
+        sup_count = sum(1 for _, r in items_t.iterrows() if r["calificacion"] >= r["superior"])
+        td1, td2, td3 = st.columns(3)
+        td1.metric("Criterios", len(items_t))
+        td2.metric("Superiores", sup_count)
+        td3.metric("Promedio", f"{avg_t:.1f}")
         st.plotly_chart(fig_t, use_container_width=True, config={"displayModeBar": False})
 
     # ── Hallazgos ─────────────────────────────────────────────────────────────
