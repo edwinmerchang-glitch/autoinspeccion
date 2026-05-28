@@ -8,12 +8,12 @@ from pathlib import Path
 
 from init_db import init_db
 from db.queries import get_tiendas, get_auditorias
-import pages.dashboard       as pg_dashboard
-import pages.farma           as pg_farma
-import pages.tienda          as pg_tienda
-import pages.hallazgos       as pg_hallazgos
-import pages.botiquin        as pg_botiquin
-import pages.nueva_auditoria as pg_nueva
+import views.dashboard       as pg_dashboard
+import views.farma           as pg_farma
+import views.tienda          as pg_tienda
+import views.hallazgos       as pg_hallazgos
+import views.botiquin        as pg_botiquin
+import views.nueva_auditoria as pg_nueva
 
 
 st.set_page_config(
