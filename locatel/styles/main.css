@@ -8,6 +8,44 @@
 .stDeployButton { display: none; }
 header[data-testid="stHeader"] { display: none !important; }
 
+/* ── Botón abrir/cerrar sidebar — visible y estilizado ── */
+[data-testid="collapsedControl"],
+[data-testid="stSidebarCollapsedControl"] {
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    position: fixed !important;
+    top: 12px !important;
+    left: 12px !important;
+    z-index: 999999 !important;
+    width: 42px !important;
+    height: 42px !important;
+    border-radius: 10px !important;
+    background: linear-gradient(135deg, #1d4ed8, #3b82f6) !important;
+    box-shadow: 0 4px 14px rgba(37,99,235,.45) !important;
+    align-items: center !important;
+    justify-content: center !important;
+    cursor: pointer !important;
+    border: none !important;
+    color: white !important;
+}
+[data-testid="collapsedControl"]:hover,
+[data-testid="stSidebarCollapsedControl"]:hover {
+    box-shadow: 0 6px 20px rgba(37,99,235,.6) !important;
+    transform: scale(1.06) !important;
+}
+[data-testid="collapsedControl"] svg,
+[data-testid="stSidebarCollapsedControl"] svg {
+    fill: white !important;
+    color: white !important;
+    display: block !important;
+}
+/* Espacio para que el contenido no quede bajo el botón */
+.block-container { padding-top: 4rem !important; }
+
+/* Ocultar el botón de colapsar que aparece DENTRO del sidebar abierto */
+[data-testid="stSidebarCollapseButton"] { display: none !important; }
+
 /* ── Sidebar ── */
 [data-testid="stSidebar"] {
     background: #0a0f1e !important;
