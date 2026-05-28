@@ -56,22 +56,94 @@ def render(sel_aud_id: int, sel_label: str) -> None:
     st.markdown("<br>", unsafe_allow_html=True)
 
     # ── KPIs ──────────────────────────────────────────────────────────────────
-    tf    = len(items_f)
-    cf    = int(items_f["puntaje"].sum()) if tf else 0
-    pf    = cf / tf if tf else 0
-    avg_t = items_t["calificacion"].mean() if len(items_t) else 0
-    pt    = avg_t / 10 if len(items_t) else 0
+    tf     = len(items_f)
+    cf     = int(items_f["puntaje"].sum()) if tf else 0
+    pf     = cf / tf if tf else 0
+    avg_t  = items_t["calificacion"].mean() if len(items_t) else 0
+    pt     = avg_t / 10 if len(items_t) else 0
     h_pend = len(hall[hall["estado"] == "Pendiente"]) if len(hall) else 0
 
-    res_accent = "green" if resultado == "FAVORABLE" else ("amber" if resultado == "CONDICIONADO" else "red")
-    res_val    = "val-green" if resultado == "FAVORABLE" else ("val-amber" if resultado == "CONDICIONADO" else "val-red")
+    # CSS para estilizar st.metric como tarjetas modernas
+    st.markdown("""
+    <style>
+    [data-testid="stMetric"] {
+        background: white;
+        border: 1px solid #e8eef5;
+        border-radius: 16px;
+        padding: 1.1rem 1.25rem 1rem;
+        box-shadow: 0 2px 12px rgba(0,0,0,.05);
+        position: relative;
+        overflow: hidden;
+    }
+    [data-testid="stMetric"]::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, #1a56db, #60a5fa);
+        border-radius: 16px 16px 0 0;
+    }
+    [data-testid="stMetricLabel"] {
+        font-size: .62rem !important;
+        font-weight: 700 !important;
+        color: #94a3b8 !important;
+        text-transform: uppercase !important;
+        letter-spacing: .07em !important;
+    }
+    [data-testid="stMetricValue"] {
+        font-size: 1.6rem !important;
+        font-weight: 800 !important;
+        color: #0f172a !important;
+        letter-spacing: -.02em !important;
+        line-height: 1.1 !important;
+    }
+    [data-testid="stMetricDelta"] {
+        font-size: .72rem !important;
+        font-weight: 500 !important;
+    }
+    </style>
+    """, unsafe_allow_html=True)
 
     k1, k2, k3, k4, k5 = st.columns(5)
-    k1.markdown(kpi_html("Calificación Global", f"{calif:.0%}", "Score consolidado", "blue", val_color_class(calif)), unsafe_allow_html=True)
-    k2.markdown(kpi_html("Cumplimiento Farma",  f"{pf:.0%}",   f"{cf}/{tf} ítems",  "green", val_color_class(pf)),   unsafe_allow_html=True)
-    k3.markdown(kpi_html("Promedio Tienda",     f"{avg_t:.1f}","Meta: 9.5 / 10",    "purple", val_color_class(pt)),  unsafe_allow_html=True)
-    k4.markdown(kpi_html("Hallazgos Pendientes", str(h_pend),  "sin resolver",      "red" if h_pend else "green", "val-red" if h_pend else "val-green"), unsafe_allow_html=True)
-    k5.markdown(kpi_html("Estado", resultado, audit_date, res_accent, res_val), unsafe_allow_html=True)
+
+    # Calificación global
+    k1.metric(
+        label="📊 Calificación Global",
+        value=f"{calif:.0%}",
+        delta="Score consolidado",
+    )
+
+    # Cumplimiento farma
+    delta_f = "✅ Favorable" if pf >= 0.95 else ("⚠️ Aceptable" if pf >= 0.85 else "❌ Desfavorable")
+    k2.metric(
+        label="💊 Cumplimiento Farma",
+        value=f"{pf:.0%}",
+        delta=f"{cf}/{tf} ítems · {delta_f}",
+    )
+
+    # Promedio tienda
+    delta_t = "✅ Favorable" if pt >= 0.95 else ("⚠️ Aceptable" if pt >= 0.85 else "❌ Bajo meta")
+    k3.metric(
+        label="🏪 Promedio Tienda",
+        value=f"{avg_t:.1f}",
+        delta=f"Meta 9.5 · {delta_t}",
+    )
+
+    # Hallazgos
+    k4.metric(
+        label="⚠️ Hallazgos Pendientes",
+        value=str(h_pend),
+        delta="sin resolver" if h_pend else "Todo resuelto ✅",
+        delta_color="inverse" if h_pend else "normal",
+    )
+
+    # Estado
+    estado_icon = "✅" if resultado == "FAVORABLE" else ("⚠️" if resultado == "CONDICIONADO" else "❌")
+    k5.metric(
+        label="🏁 Estado Auditoría",
+        value=resultado,
+        delta=f"{estado_icon} {audit_date}",
+    )
 
     st.markdown("<br>", unsafe_allow_html=True)
 
