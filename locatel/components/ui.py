@@ -102,10 +102,10 @@ def gauge_html(value: float, title: str, label: str, threshold_color: str) -> st
 
     return f"""
     <div style="background:white;border-radius:14px;border:1px solid #e8eef5;
-                box-shadow:0 2px 8px rgba(0,0,0,.04);padding:1.25rem 1rem 1rem;text-align:center;">
+                box-shadow:0 2px 8px rgba(0,0,0,.04);padding:1.25rem 1rem 1.5rem;text-align:center;">
       <div style="font-size:.72rem;font-weight:700;color:#94a3b8;text-transform:uppercase;
                   letter-spacing:.07em;margin-bottom:.5rem;">{title}</div>
-      <svg width="200" height="165" viewBox="0 0 200 145" xmlns="http://www.w3.org/2000/svg"
+      <svg width="200" height="185" viewBox="0 0 200 165" xmlns="http://www.w3.org/2000/svg"
            style="display:block;margin:0 auto;overflow:visible;">
         <path d="{track}" fill="none" stroke="{track_col}" stroke-width="{stroke_w}" stroke-linecap="round"/>
         {fill_svg}
