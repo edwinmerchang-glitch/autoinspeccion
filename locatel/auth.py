@@ -1,44 +1,62 @@
 """
 auth.py
 -------
-Sistema de autenticación simple con roles (admin / viewer).
-Los usuarios y contraseñas se definen en .streamlit/secrets.toml.
-
-Uso:
-    from auth import require_login, is_admin
-
-    require_login()          # muestra login si no hay sesión activa
-    if is_admin(): ...       # solo admins pueden editar
+Autenticación con roles (admin / viewer).
+Los usuarios se guardan en la tabla `usuarios` de SQLite.
+Fallback a st.secrets si la tabla está vacía (primer arranque).
 """
 
 import streamlit as st
 
 
-def _get_users() -> dict:
-    """Lee usuarios desde st.secrets. Retorna dict {username: {password, role}}."""
+def _get_user_from_db(username: str) -> dict | None:
     try:
-        return dict(st.secrets.get("users", {}))
+        from db.queries import get_usuario_by_username, ensure_users_table
+        ensure_users_table()
+        return get_usuario_by_username(username)
     except Exception:
-        # Fallback para desarrollo local sin secrets.toml
-        return {
-            "admin": {"password": "admin123", "role": "admin"},
-        }
+        return None
+
+
+def _get_user_from_secrets(username: str) -> dict | None:
+    try:
+        users = dict(st.secrets.get("users", {}))
+        data  = users.get(username.strip().lower())
+        if data:
+            return {"username": username, "password": data["password"], "role": data["role"]}
+    except Exception:
+        pass
+    return None
+
+
+def _seed_admin_from_secrets() -> None:
+    """Al primer arranque, crea el admin desde secrets si la tabla está vacía."""
+    try:
+        from db.queries import ensure_users_table, get_usuarios, create_usuario
+        ensure_users_table()
+        df = get_usuarios()
+        if len(df) == 0:
+            users = dict(st.secrets.get("users", {}))
+            for uname, data in users.items():
+                create_usuario(uname, data["password"], data["role"])
+            # Fallback si no hay secrets
+            if not users:
+                create_usuario("admin", "admin123", "admin")
+    except Exception:
+        pass
 
 
 def require_login() -> None:
-    """
-    Bloquea la app hasta que el usuario inicie sesión.
-    Llama esto al principio de app.py, antes de renderizar cualquier contenido.
-    """
     if st.session_state.get("authenticated"):
         return
 
-    # Centrar el formulario
+    _seed_admin_from_secrets()
+
     col1, col2, col3 = st.columns([1, 1.2, 1])
     with col2:
         st.markdown("""
         <div style='text-align:center;padding:2rem 0 1rem;'>
-          <div style='font-size:2rem;'>🏥</div>
+          <div style='font-size:2.5rem;'>🏥</div>
           <div style='font-size:1.4rem;font-weight:800;color:#0f172a;letter-spacing:-.02em;margin-top:.5rem;'>
             Autoinspección Locatel
           </div>
@@ -54,12 +72,11 @@ def require_login() -> None:
             submitted = st.form_submit_button("Ingresar", type="primary", use_container_width=True)
 
         if submitted:
-            users = _get_users()
-            user_data = users.get(username.strip().lower())
-            if user_data and user_data["password"] == password:
+            user = _get_user_from_db(username) or _get_user_from_secrets(username)
+            if user and user["password"] == password:
                 st.session_state["authenticated"] = True
                 st.session_state["username"]      = username.strip().lower()
-                st.session_state["role"]          = user_data["role"]
+                st.session_state["role"]          = user["role"]
                 st.rerun()
             else:
                 st.error("Usuario o contraseña incorrectos.")
@@ -74,17 +91,14 @@ def require_login() -> None:
 
 
 def is_admin() -> bool:
-    """Retorna True si el usuario autenticado tiene rol admin."""
     return st.session_state.get("role") == "admin"
 
 
 def current_user() -> str:
-    """Retorna el nombre del usuario autenticado."""
     return st.session_state.get("username", "")
 
 
 def logout() -> None:
-    """Cierra la sesión del usuario actual."""
     for key in ["authenticated", "username", "role", "page"]:
         st.session_state.pop(key, None)
     st.rerun()

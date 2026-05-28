@@ -255,3 +255,69 @@ def get_consolidado(tienda_id: str | None = None) -> pd.DataFrame:
 
     with get_db() as conn:
         return pd.read_sql(sql, conn, params=params if params else None)
+
+
+# ── Usuarios ───────────────────────────────────────────────────────────────────
+
+def ensure_users_table() -> None:
+    """Crea la tabla de usuarios si no existe."""
+    with get_db() as conn:
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS usuarios (
+                id       INTEGER PRIMARY KEY AUTOINCREMENT,
+                username TEXT    UNIQUE NOT NULL,
+                password TEXT    NOT NULL,
+                role     TEXT    NOT NULL DEFAULT 'viewer',
+                activo   INTEGER NOT NULL DEFAULT 1
+            )
+        """)
+
+
+def get_usuarios() -> pd.DataFrame:
+    with get_db() as conn:
+        return pd.read_sql(
+            "SELECT id, username, role, activo FROM usuarios ORDER BY role DESC, username",
+            conn
+        )
+
+
+def create_usuario(username: str, password: str, role: str) -> bool:
+    """Retorna True si se creó, False si el usuario ya existe."""
+    try:
+        with get_db() as conn:
+            conn.execute(
+                "INSERT INTO usuarios (username, password, role) VALUES (?, ?, ?)",
+                (username.strip().lower(), password, role)
+            )
+        return True
+    except Exception:
+        return False
+
+
+def update_usuario(uid: int, password: str | None, role: str, activo: int) -> None:
+    if password:
+        with get_db() as conn:
+            conn.execute(
+                "UPDATE usuarios SET password=?, role=?, activo=? WHERE id=?",
+                (password, role, activo, uid)
+            )
+    else:
+        with get_db() as conn:
+            conn.execute(
+                "UPDATE usuarios SET role=?, activo=? WHERE id=?",
+                (role, activo, uid)
+            )
+
+
+def delete_usuario(uid: int) -> None:
+    with get_db() as conn:
+        conn.execute("DELETE FROM usuarios WHERE id=?", (uid,))
+
+
+def get_usuario_by_username(username: str) -> dict | None:
+    with get_db() as conn:
+        row = conn.execute(
+            "SELECT * FROM usuarios WHERE username=? AND activo=1",
+            (username.strip().lower(),)
+        ).fetchone()
+        return dict(row) if row else None

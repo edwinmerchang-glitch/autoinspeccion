@@ -16,6 +16,7 @@ import views.hallazgos       as pg_hallazgos
 import views.botiquin        as pg_botiquin
 import views.nueva_auditoria as pg_nueva
 import views.consolidado     as pg_consolidado
+import views.usuarios        as pg_usuarios
 
 
 st.set_page_config(
@@ -29,13 +30,17 @@ css_path = Path(__file__).parent / "styles" / "main.css"
 st.markdown(f"<style>{css_path.read_text()}</style>", unsafe_allow_html=True)
 
 init_db()
-
-# ── Login obligatorio ──────────────────────────────────────────────────────────
 require_login()
 
 # ── Navegación según rol ───────────────────────────────────────────────────────
-# Admins ven todo; viewers solo ven Consolidado y Dashboard
-ADMIN_ONLY = {"💊  Auditoría Farma", "🏪  Auditoría Tienda", "⚠️  Hallazgos", "🩺  Botiquín", "➕  Nueva Auditoría"}
+ADMIN_ONLY = {
+    "💊  Auditoría Farma",
+    "🏪  Auditoría Tienda",
+    "⚠️  Hallazgos",
+    "🩺  Botiquín",
+    "➕  Nueva Auditoría",
+    "👥  Usuarios",
+}
 
 ALL_NAV = [
     ("📈", "Consolidado",      "📈  Consolidado"),
@@ -45,6 +50,7 @@ ALL_NAV = [
     ("⚠️", "Hallazgos",        "⚠️  Hallazgos"),
     ("🩺", "Botiquín",         "🩺  Botiquín"),
     ("➕", "Nueva Auditoría",  "➕  Nueva Auditoría"),
+    ("👥", "Usuarios",         "👥  Usuarios"),
 ]
 
 NAV_ITEMS = ALL_NAV if is_admin() else [n for n in ALL_NAV if n[2] not in ADMIN_ONLY]
@@ -52,7 +58,6 @@ NAV_ITEMS = ALL_NAV if is_admin() else [n for n in ALL_NAV if n[2] not in ADMIN_
 if "page" not in st.session_state:
     st.session_state["page"] = "📈  Consolidado"
 
-# Si el viewer intenta acceder a una página de admin, redirigir
 if not is_admin() and st.session_state["page"] in ADMIN_ONLY:
     st.session_state["page"] = "📈  Consolidado"
 
@@ -61,7 +66,6 @@ today_str = date.today().strftime("%d/%m/%Y")
 
 # ── Sidebar ────────────────────────────────────────────────────────────────────
 with st.sidebar:
-    # Usuario + logout
     role_badge = "🔑 Admin" if is_admin() else "👁️ Viewer"
     st.markdown(f"""
     <div style='padding:.75rem .25rem .25rem;'>
@@ -95,8 +99,8 @@ with st.sidebar:
             st.rerun()
         st.markdown("</div>", unsafe_allow_html=True)
 
-    # Selectores de tienda/auditoría (solo para páginas que los necesitan)
-    if page != "📈  Consolidado" and page != "➕  Nueva Auditoría":
+    needs_selector = page not in {"📈  Consolidado", "➕  Nueva Auditoría", "👥  Usuarios"}
+    if needs_selector:
         st.markdown("""
         <hr style='border:none;border-top:1px solid #1a2744;margin:.75rem 0 .5rem;'>
         <div style='font-size:.6rem;font-weight:700;color:#2d4a6b;text-transform:uppercase;
@@ -130,21 +134,17 @@ with st.sidebar:
 # ── Routing ────────────────────────────────────────────────────────────────────
 if page == "📈  Consolidado":
     pg_consolidado.render()
-
 elif page == "📊  Dashboard":
     pg_dashboard.render(sel_aud_id, sel_label)
-
 elif page == "💊  Auditoría Farma":
     pg_farma.render(sel_aud_id)
-
 elif page == "🏪  Auditoría Tienda":
     pg_tienda.render(sel_aud_id)
-
 elif page == "⚠️  Hallazgos":
     pg_hallazgos.render(sel_aud_id)
-
 elif page == "🩺  Botiquín":
     pg_botiquin.render(sel_aud_id)
-
 elif page == "➕  Nueva Auditoría":
     pg_nueva.render()
+elif page == "👥  Usuarios":
+    pg_usuarios.render()
