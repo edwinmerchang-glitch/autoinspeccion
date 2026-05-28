@@ -90,89 +90,78 @@ def render(sel_aud_id: int, sel_label: str) -> None:
     cl, cr = st.columns([1.3, 1])
 
     with cl:
+        st.markdown("""<div style="background:white;border-radius:16px;border:1px solid #e8eef5;
+            box-shadow:0 2px 12px rgba(0,0,0,.04);padding:1.5rem;margin-bottom:1rem;">
+            <div style="font-size:.7rem;font-weight:700;color:#64748b;text-transform:uppercase;
+                letter-spacing:.08em;margin-bottom:1rem;padding-bottom:.75rem;
+                border-bottom:1px solid #f1f5f9;">📋 Cumplimiento por Sección</div>""",
+            unsafe_allow_html=True)
+
         secs = get_secciones_farma()
-        sec_rows = []
         for _, s in secs.iterrows():
             si = items_f[items_f["seccion_id"] == s["id"]]
             if not len(si): continue
             cum = int(si["puntaje"].sum()); tot = len(si); p = cum / tot
-            sec_rows.append({"nombre": s["nombre"], "cum": cum, "tot": tot, "p": p})
-
-        items_html = ""
-        for d in sec_rows:
-            p = d["p"]
             if p >= 0.95:
-                bar_col, txt_col, bg_col, dot_col, lbl = "#10b981","#059669","#f0fdf4","#d1fae5","Muy favorable"
+                bc, tc, bg, dc, lbl = "#10b981","#059669","#f0fdf4","#d1fae5","Muy favorable"
             elif p >= 0.85:
-                bar_col, txt_col, bg_col, dot_col, lbl = "#f59e0b","#b45309","#fffbeb","#fde68a","Aceptable"
+                bc, tc, bg, dc, lbl = "#f59e0b","#b45309","#fffbeb","#fde68a","Aceptable"
             else:
-                bar_col, txt_col, bg_col, dot_col, lbl = "#ef4444","#dc2626","#fff5f5","#fecaca","Desfavorable"
+                bc, tc, bg, dc, lbl = "#ef4444","#dc2626","#fff5f5","#fecaca","Desfavorable"
+            nombre = s["nombre"]
+            pw = f"{p*100:.0f}"
+            pf = f"{p:.0%}"
+            st.markdown(
+                f"<div style=\"background:{bg};border:1px solid {dc};border-radius:12px;"
+                f"padding:.85rem 1rem;margin-bottom:.6rem;\">"
+                f"<div style=\"display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:.5rem;\">"
+                f"<div style=\"font-size:.8rem;font-weight:600;color:#334155;line-height:1.3;flex:1;padding-right:.5rem;\">{nombre}</div>"
+                f"<div style=\"text-align:right;flex-shrink:0;\">"
+                f"<div style=\"font-size:1.1rem;font-weight:800;color:{tc};line-height:1;\">{pf}</div>"
+                f"<div style=\"font-size:.65rem;color:{tc};opacity:.7;margin-top:1px;\">{cum}/{tot} ítems</div>"
+                f"</div></div>"
+                f"<div style=\"background:white;border-radius:100px;height:6px;overflow:hidden;opacity:.7;\">"
+                f"<div style=\"width:{pw}%;height:100%;background:{bc};border-radius:100px;\"></div></div>"
+                f"<div style=\"font-size:.65rem;color:{tc};margin-top:.35rem;font-weight:600;opacity:.8;\">{lbl}</div>"
+                f"</div>",
+                unsafe_allow_html=True)
 
-            items_html += f"""
-            <div style='background:{bg_col};border:1px solid {dot_col};border-radius:12px;
-                        padding:.85rem 1rem;margin-bottom:.6rem;'>
-              <div style='display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:.5rem;'>
-                <div style='font-size:.8rem;font-weight:600;color:#334155;line-height:1.3;flex:1;padding-right:.5rem;'>
-                  {d["nombre"]}
-                </div>
-                <div style='text-align:right;flex-shrink:0;'>
-                  <div style='font-size:1.1rem;font-weight:800;color:{txt_col};line-height:1;'>{p:.0%}</div>
-                  <div style='font-size:.65rem;color:{txt_col};opacity:.7;margin-top:1px;'>{d["cum"]}/{d["tot"]} ítems</div>
-                </div>
-              </div>
-              <div style='background:white;border-radius:100px;height:6px;overflow:hidden;opacity:.7;'>
-                <div style='width:{p*100:.0f}%;height:100%;background:{bar_col};border-radius:100px;'></div>
-              </div>
-              <div style='font-size:.65rem;color:{txt_col};margin-top:.35rem;font-weight:600;opacity:.8;'>{lbl}</div>
-            </div>"""
-
-        st.markdown(f"""
-        <div style='background:white;border-radius:16px;border:1px solid #e8eef5;
-                    box-shadow:0 2px 12px rgba(0,0,0,.04);padding:1.5rem;margin-bottom:1rem;'>
-          <div style='font-size:.7rem;font-weight:700;color:#64748b;text-transform:uppercase;
-                      letter-spacing:.08em;margin-bottom:1rem;padding-bottom:.75rem;
-                      border-bottom:1px solid #f1f5f9;'>📋 Cumplimiento por Sección</div>
-          {items_html}
-        </div>""", unsafe_allow_html=True)
+        st.markdown("</div>", unsafe_allow_html=True)
 
     with cr:
-        tienda_html = ""
+        st.markdown("""<div style="background:white;border-radius:16px;border:1px solid #e8eef5;
+            box-shadow:0 2px 12px rgba(0,0,0,.04);padding:1.5rem;margin-bottom:1rem;">
+            <div style="font-size:.7rem;font-weight:700;color:#64748b;text-transform:uppercase;
+                letter-spacing:.08em;margin-bottom:1rem;padding-bottom:.75rem;
+                border-bottom:1px solid #f1f5f9;">🏪 Criterios de Tienda</div>""",
+            unsafe_allow_html=True)
+
         for _, row in items_t.iterrows():
             cal = row["calificacion"]
             if cal >= row["superior"]:
-                bar_col, txt_col, bg_col, dot_col, lbl, icon = "#10b981","#059669","#f0fdf4","#d1fae5","Superior","✅"
+                bc, tc, bg, dc, lbl, icon = "#10b981","#059669","#f0fdf4","#d1fae5","Superior","✅"
             elif cal >= row["minimo"]:
-                bar_col, txt_col, bg_col, dot_col, lbl, icon = "#f59e0b","#b45309","#fffbeb","#fde68a","Aceptable","⚠️"
+                bc, tc, bg, dc, lbl, icon = "#f59e0b","#b45309","#fffbeb","#fde68a","Aceptable","⚠️"
             else:
-                bar_col, txt_col, bg_col, dot_col, lbl, icon = "#ef4444","#dc2626","#fff5f5","#fecaca","Bajo mínimo","❌"
+                bc, tc, bg, dc, lbl, icon = "#ef4444","#dc2626","#fff5f5","#fecaca","Bajo mínimo","❌"
+            pw = f"{cal/10*100:.0f}"
+            criterio = row["criterio"]
+            mn, mt, sp = row["minimo"], row["meta"], row["superior"]
+            st.markdown(
+                f"<div style=\"background:{bg};border:1px solid {dc};border-radius:12px;"
+                f"padding:.85rem 1rem;margin-bottom:.6rem;\">"
+                f"<div style=\"display:flex;justify-content:space-between;align-items:center;margin-bottom:.45rem;\">"
+                f"<div style=\"font-size:.78rem;font-weight:600;color:#334155;flex:1;padding-right:.5rem;line-height:1.3;\">"
+                f"{icon} {criterio}</div>"
+                f"<div style=\"font-size:1.15rem;font-weight:800;color:{tc};flex-shrink:0;\">{cal}</div></div>"
+                f"<div style=\"background:white;border-radius:100px;height:6px;overflow:hidden;opacity:.7;\">"
+                f"<div style=\"width:{pw}%;height:100%;background:{bc};border-radius:100px;\"></div></div>"
+                f"<div style=\"display:flex;justify-content:space-between;margin-top:.35rem;font-size:.63rem;color:{tc};opacity:.75;\">"
+                f"<span>{lbl}</span><span>Mín {mn} · Meta {mt} · Sup {sp}</span></div>"
+                f"</div>",
+                unsafe_allow_html=True)
 
-            pct_w = cal / 10 * 100
-            tienda_html += f"""
-            <div style='background:{bg_col};border:1px solid {dot_col};border-radius:12px;
-                        padding:.85rem 1rem;margin-bottom:.6rem;'>
-              <div style='display:flex;justify-content:space-between;align-items:center;margin-bottom:.45rem;'>
-                <div style='font-size:.78rem;font-weight:600;color:#334155;flex:1;padding-right:.5rem;line-height:1.3;'>
-                  {icon} {row['criterio']}
-                </div>
-                <div style='font-size:1.15rem;font-weight:800;color:{txt_col};flex-shrink:0;'>{cal}</div>
-              </div>
-              <div style='background:white;border-radius:100px;height:6px;overflow:hidden;opacity:.7;'>
-                <div style='width:{pct_w:.0f}%;height:100%;background:{bar_col};border-radius:100px;'></div>
-              </div>
-              <div style='display:flex;justify-content:space-between;margin-top:.35rem;font-size:.63rem;color:{txt_col};opacity:.75;'>
-                <span>{lbl}</span>
-                <span>Mín {row['minimo']} · Meta {row['meta']} · Sup {row['superior']}</span>
-              </div>
-            </div>"""
-
-        st.markdown(f"""
-        <div style='background:white;border-radius:16px;border:1px solid #e8eef5;
-                    box-shadow:0 2px 12px rgba(0,0,0,.04);padding:1.5rem;margin-bottom:1rem;'>
-          <div style='font-size:.7rem;font-weight:700;color:#64748b;text-transform:uppercase;
-                      letter-spacing:.08em;margin-bottom:1rem;padding-bottom:.75rem;
-                      border-bottom:1px solid #f1f5f9;'>🏪 Criterios de Tienda</div>
-          {tienda_html}
-        </div>""", unsafe_allow_html=True)
+        st.markdown("</div>", unsafe_allow_html=True)
 
     # ── Hallazgos ─────────────────────────────────────────────────────────────
     if len(hall):
