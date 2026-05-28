@@ -1,21 +1,11 @@
 """
-app.py
-------
-Punto de entrada de la aplicación. Solo hace tres cosas:
-  1. Configura la página y carga el CSS.
-  2. Renderiza el sidebar con navegación y selectores.
-  3. Delega el render al módulo de página correspondiente.
-
-Para agregar una nueva página:
-  1. Crea pages/mi_pagina.py con una función render(...)
-  2. Agrega la entrada en NAV_ITEMS
-  3. Agrega el elif en el bloque de routing al final
+app.py — Autoinspección Locatel
+Navegación: sidebar nativo de Streamlit + CSS hamburguesa personalizado.
 """
 
 import streamlit as st
 from datetime import date
 from pathlib import Path
-import streamlit.components.v1 as components
 
 from init_db import init_db
 from db.queries import get_tiendas, get_auditorias
@@ -27,7 +17,6 @@ import pages.botiquin        as pg_botiquin
 import pages.nueva_auditoria as pg_nueva
 
 
-# ── Configuración de página ────────────────────────────────────────────────────
 st.set_page_config(
     page_title="Autoinspección Locatel",
     page_icon="🏥",
@@ -35,14 +24,65 @@ st.set_page_config(
     initial_sidebar_state="collapsed",
 )
 
-# ── CSS desde archivo externo ──────────────────────────────────────────────────
+# ── CSS ────────────────────────────────────────────────────────────────────────
 css_path = Path(__file__).parent / "styles" / "main.css"
-st.markdown(f"<style>{css_path.read_text()}</style>", unsafe_allow_html=True)
+base_css = css_path.read_text()
+
+hamburger_css = """
+/* Ocultar el botón nativo de colapsar que aparece DENTRO del sidebar */
+[data-testid="stSidebarCollapseButton"] { display: none !important; }
+
+/* Reestilizar el botón nativo de ABRIR sidebar (la flecha que queda en pantalla)
+   para que parezca un botón hamburguesa */
+[data-testid="collapsedControl"] {
+    position: fixed !important;
+    top: 12px !important;
+    left: 12px !important;
+    z-index: 999999 !important;
+    width: 46px !important;
+    height: 46px !important;
+    border-radius: 12px !important;
+    background: linear-gradient(135deg, #1d4ed8, #3b82f6) !important;
+    box-shadow: 0 4px 16px rgba(37,99,235,.45) !important;
+    border: none !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    cursor: pointer !important;
+    transition: transform .15s, box-shadow .15s !important;
+    color: transparent !important;  /* ocultar la flecha original */
+    overflow: hidden !important;
+}
+[data-testid="collapsedControl"]:hover {
+    transform: scale(1.08) !important;
+    box-shadow: 0 6px 24px rgba(37,99,235,.6) !important;
+}
+
+/* Dibujar las 3 líneas hamburguesa con pseudo-elementos */
+[data-testid="collapsedControl"]::before {
+    content: '';
+    position: absolute;
+    width: 20px;
+    height: 2px;
+    background: white;
+    border-radius: 2px;
+    box-shadow: 0 -6px 0 white, 0 6px 0 white;
+    pointer-events: none;
+}
+
+/* Ocultar el SVG/ícono original dentro del botón */
+[data-testid="collapsedControl"] svg { display: none !important; }
+
+/* Dar espacio al contenido para que no quede debajo del botón */
+.block-container { padding-top: 4rem !important; }
+"""
+
+st.markdown(f"<style>{base_css}\n{hamburger_css}</style>", unsafe_allow_html=True)
 
 # ── Init DB ────────────────────────────────────────────────────────────────────
 init_db()
 
-# ── Navegación ─────────────────────────────────────────────────────────────────
+# ── Estado de navegación ───────────────────────────────────────────────────────
 NAV_ITEMS = [
     ("📊", "Dashboard",        "📊  Dashboard"),
     ("💊", "Auditoría Farma",  "💊  Auditoría Farma"),
@@ -96,7 +136,8 @@ with st.sidebar:
         sel_aud_label = st.selectbox("Auditoría", list(a_opts.keys()))
         sel_aud_id    = a_opts[sel_aud_label]
     else:
-        st.markdown("<div style='font-size:.78rem;color:#3b5270;padding:.5rem 0;'>Sin auditorías</div>", unsafe_allow_html=True)
+        st.markdown("<div style='font-size:.78rem;color:#3b5270;padding:.5rem 0;'>Sin auditorías</div>",
+                    unsafe_allow_html=True)
         sel_aud_id = None
 
     st.markdown(
@@ -104,50 +145,6 @@ with st.sidebar:
         f"<div style='font-size:.62rem;color:#2d4a6b;padding:.25rem;font-weight:600;'>📅 {today_str}</div>",
         unsafe_allow_html=True,
     )
-
-
-# ── Botón hamburguesa flotante (abre el sidebar nativo de Streamlit) ───────────
-# Usamos components.html para que el JS sí se ejecute
-components.html("""
-<style>
-  #hb {
-    position: fixed;
-    top: 14px;
-    left: 14px;
-    z-index: 999999;
-    width: 44px;
-    height: 44px;
-    border-radius: 11px;
-    background: linear-gradient(135deg, #1d4ed8, #3b82f6);
-    box-shadow: 0 4px 14px rgba(37,99,235,.5);
-    border: none;
-    cursor: pointer;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 5px;
-    transition: transform .15s, box-shadow .15s;
-  }
-  #hb:hover { transform: scale(1.07); box-shadow: 0 6px 20px rgba(37,99,235,.6); }
-  #hb .b { width: 18px; height: 2px; background: white; border-radius: 2px; }
-</style>
-<button id="hb" title="Menú" onclick="openSidebar()">
-  <div class="b"></div>
-  <div class="b"></div>
-  <div class="b"></div>
-</button>
-<script>
-  function openSidebar() {
-    // El sidebar de Streamlit tiene un botón con data-testid="collapsedControl"
-    // buscamos en el documento padre (parent frame)
-    try {
-      const btn = window.parent.document.querySelector('[data-testid="collapsedControl"]');
-      if (btn) btn.click();
-    } catch(e) {}
-  }
-</script>
-""", height=70)
 
 
 # ── Routing ────────────────────────────────────────────────────────────────────
