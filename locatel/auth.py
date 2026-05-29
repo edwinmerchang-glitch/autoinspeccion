@@ -83,7 +83,7 @@ def require_login() -> None:
 
         st.markdown("""
         <div style='text-align:center;font-size:.72rem;color:#94a3b8;margin-top:1rem;'>
-          Contacta al administrador si no tienes acceso.
+          Creado por Edwin Merchan.
         </div>
         """, unsafe_allow_html=True)
 
