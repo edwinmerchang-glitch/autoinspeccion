@@ -52,8 +52,8 @@ def require_login() -> None:
 
     _seed_admin_from_secrets()
 
-    st.title("🏥 Autoinspección Locatel")
-    st.caption("Sistema de autoinspección para tiendas Locatel")
+    st.markdown("<h1 style='text-align:center;'>🏥 Autoinspección Locatel</h1>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align:center;color:#64748b;'>Sistema de autoinspección para tiendas Locatel</p>", unsafe_allow_html=True)
     st.markdown("---")
 
     col1, col2, col3 = st.columns([1, 1.5, 1])
