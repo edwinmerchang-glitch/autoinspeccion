@@ -56,9 +56,8 @@ def require_login() -> None:
     st.caption("Sistema de autoinspección para tiendas Locatel")
     st.markdown("---")
 
-    col1, col2 = st.columns([1, 1])
-
-    with col1:
+    col1, col2, col3 = st.columns([1, 1.5, 1])
+    with col2:
         st.markdown("### Ingresa tus credenciales")
         with st.form("login_form"):
             username = st.text_input("Usuario", placeholder="tu usuario")
@@ -76,25 +75,7 @@ def require_login() -> None:
                 st.error("❌ Usuario o contraseña incorrectos.")
 
         st.caption("Contacta al administrador si no tienes acceso.")
-
-    with col2:
-        st.markdown("""
-        <div style='background:#f0f4f8;border-radius:16px;padding:2rem;height:100%;'>
-          <div style='font-size:1rem;font-weight:700;color:#0f172a;margin-bottom:1rem;'>¿Qué puedes hacer?</div>
-          <div style='font-size:.85rem;color:#475569;line-height:1.8;'>
-            📈 Ver consolidado de todas las tiendas<br>
-            📊 Dashboard por auditoría<br>
-            💊 Gestionar auditoría farmacéutica<br>
-            🏪 Criterios operativos de tienda<br>
-            ⚠️ Seguimiento de hallazgos<br>
-            🩺 Control de botiquín<br>
-            👥 Gestión de usuarios (Admin)
-          </div>
-          <div style='margin-top:1.5rem;font-size:.72rem;color:#94a3b8;'>
-            Creado por Edwin Merchán.
-          </div>
-        </div>
-        """, unsafe_allow_html=True)
+        st.caption("Creado por Edwin Merchán.")
 
     st.stop()
 
