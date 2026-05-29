@@ -54,17 +54,10 @@ def require_login() -> None:
 
     col1, col2, col3 = st.columns([1, 1.2, 1])
     with col2:
-        st.markdown("""
-        <div style='text-align:center;padding:2rem 0 1rem;'>
-          <div style='font-size:2.5rem;'>🏥</div>
-          <div style='font-size:1.4rem;font-weight:800;color:#0f172a;letter-spacing:-.02em;margin-top:.5rem;'>
-            Autoinspección Locatel
-          </div>
-          <div style='font-size:.85rem;color:#64748b;margin-top:.25rem;'>
-            Ingresa tus credenciales para continuar
-          </div>
-        </div>
-        """, unsafe_allow_html=True)
+        st.markdown("<div style='text-align:center;padding:2rem 0 .5rem;font-size:2.5rem;'>🏥</div>", unsafe_allow_html=True)
+        st.title("Autoinspección Locatel")
+        st.caption("Ingresa tus credenciales para continuar")
+        st.markdown("<br>", unsafe_allow_html=True)
 
         with st.form("login_form"):
             username = st.text_input("Usuario", placeholder="tu usuario")
@@ -83,7 +76,10 @@ def require_login() -> None:
 
         st.markdown("""
         <div style='text-align:center;font-size:.72rem;color:#94a3b8;margin-top:1rem;'>
-          Creado por Edwin Merchan.
+          Contacta al administrador si no tienes acceso.
+        </div>
+        <div style='text-align:center;font-size:.72rem;color:#cbd5e1;margin-top:.5rem;'>
+          Creado por Edwin Merchán.
         </div>
         """, unsafe_allow_html=True)
 
