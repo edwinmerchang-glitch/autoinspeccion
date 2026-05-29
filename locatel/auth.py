@@ -52,17 +52,18 @@ def require_login() -> None:
 
     _seed_admin_from_secrets()
 
-    col1, col2, col3 = st.columns([1, 1.2, 1])
-    with col2:
-        st.markdown("<div style='text-align:center;padding:2rem 0 .5rem;font-size:2.5rem;'>🏥</div>", unsafe_allow_html=True)
-        st.title("Autoinspección Locatel")
-        st.caption("Ingresa tus credenciales para continuar")
-        st.markdown("<br>", unsafe_allow_html=True)
+    st.title("🏥 Autoinspección Locatel")
+    st.caption("Sistema de autoinspección para tiendas Locatel")
+    st.markdown("---")
 
+    col1, col2 = st.columns([1, 1])
+
+    with col1:
+        st.markdown("### Ingresa tus credenciales")
         with st.form("login_form"):
             username = st.text_input("Usuario", placeholder="tu usuario")
             password = st.text_input("Contraseña", type="password", placeholder="••••••••")
-            submitted = st.form_submit_button("Ingresar", type="primary", use_container_width=True)
+            submitted = st.form_submit_button("🔐 Ingresar", type="primary", use_container_width=True)
 
         if submitted:
             user = _get_user_from_db(username) or _get_user_from_secrets(username)
@@ -72,14 +73,26 @@ def require_login() -> None:
                 st.session_state["role"]          = user["role"]
                 st.rerun()
             else:
-                st.error("Usuario o contraseña incorrectos.")
+                st.error("❌ Usuario o contraseña incorrectos.")
 
+        st.caption("Contacta al administrador si no tienes acceso.")
+
+    with col2:
         st.markdown("""
-        <div style='text-align:center;font-size:.72rem;color:#94a3b8;margin-top:1rem;'>
-          Contacta al administrador si no tienes acceso.
-        </div>
-        <div style='text-align:center;font-size:.72rem;color:#cbd5e1;margin-top:.5rem;'>
-          Creado por Edwin Merchán.
+        <div style='background:#f0f4f8;border-radius:16px;padding:2rem;height:100%;'>
+          <div style='font-size:1rem;font-weight:700;color:#0f172a;margin-bottom:1rem;'>¿Qué puedes hacer?</div>
+          <div style='font-size:.85rem;color:#475569;line-height:1.8;'>
+            📈 Ver consolidado de todas las tiendas<br>
+            📊 Dashboard por auditoría<br>
+            💊 Gestionar auditoría farmacéutica<br>
+            🏪 Criterios operativos de tienda<br>
+            ⚠️ Seguimiento de hallazgos<br>
+            🩺 Control de botiquín<br>
+            👥 Gestión de usuarios (Admin)
+          </div>
+          <div style='margin-top:1.5rem;font-size:.72rem;color:#94a3b8;'>
+            Creado por Edwin Merchán.
+          </div>
         </div>
         """, unsafe_allow_html=True)
 
